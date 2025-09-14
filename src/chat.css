@@ -303,18 +303,20 @@
 /* Expanded (desktop) mode */
 .chat-widget.expanded {
   position: fixed !important;
-  right: 16px !important;
-  top: 60px !important;
-  bottom: 60px !important;
+  right: 24px !important;
+  top: 80px !important;
+  bottom: auto !important;
   left: auto !important;
-  width: 420px !important;
-  max-width: calc(100% - 32px) !important;
-  height: calc(100% - 120px) !important;
+  width: 360px !important;
+  max-width: calc(100% - 48px) !important;
+  height: auto !important;
+  max-height: calc(100% - 160px) !important;
   transform: none !important;
   border-radius: 12px !important;
   border: 1px solid rgba(0,0,0,0.06) !important;
   box-shadow: 0 16px 40px rgba(0,0,0,0.15) !important;
   overflow: hidden;
+  background: #fff;
 }
 
 .chat-widget.expanded .device-notch,
@@ -325,10 +327,23 @@
 .chat-widget.expanded .chat-widget-header { padding: 10px 12px !important; border-radius: 12px 12px 0 0 !important; }
 
 /* Make message area use full available space in expanded mode */
-.chat-widget.expanded .chat-widget-body { display: grid; grid-template-rows: 1fr auto; height: 100%; }
+.chat-widget.expanded .chat-widget-body { display: grid; grid-template-rows: auto 1fr auto; height: auto; max-height: calc(100% - 180px); }
 
-/* Adjust mobile-frame visibility when expanded */
-.chat-widget.expanded.mobile-frame { --scale: 1; }
+/* Suggestions grid like Yatra */
+.suggestions-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.suggestion-chip { display: inline-flex; align-items: center; gap: 8px; justify-content: flex-start; padding: 10px 12px; background: #fff; border-radius: 999px; box-shadow: 0 12px 28px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.03); }
+.suggestion-chip svg { width: 18px; height: 18px; opacity: .95; }
+.suggestions-toggle-row { padding-top: 10px; }
+.hide-suggestions { border: 0; background: transparent; color: #d54848; font-weight: 600; cursor: pointer; }
+
+/* Make assistant message card more like Yatra */
+.bubble-assistant > * { background: #fbfbfd; padding: 14px; border-radius: 12px; box-shadow: none; border: 1px solid rgba(0,0,0,0.04); }
+
+/* Input: rounded pill with icon */
+.chat-widget-input { padding: 12px !important; }
+.composer { border-radius: 999px; padding: 8px 10px; background: #fff; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
+.prompt-input { background: transparent; color: #333; }
+.send-btn { background: #fff; border: 0; color: #d54848; border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,0.04); }
 
 @media (max-width: 720px) {
   .chat-widget.expanded { width: calc(100% - 32px) !important; right: 16px !important; left: 16px !important; }
