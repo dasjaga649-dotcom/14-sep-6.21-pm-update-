@@ -239,6 +239,7 @@ function FlightResults({ flights }: { flights: Flight[] }) {
   const [classSel, setClassSel] = useState<string>('Any');
   const [timeSel, setTimeSel] = useState<'any' | 'night' | 'morning' | 'afternoon' | 'evening'>('any');
   const [sort, setSort] = useState<'priceAsc' | 'durationAsc' | 'departAsc'>('priceAsc');
+  const [showFilters, setShowFilters] = useState(false);
 
   const priceCeil = Math.ceil(Math.max(...flights.map(f => f.price)) || 0);
 
@@ -269,67 +270,78 @@ function FlightResults({ flights }: { flights: Flight[] }) {
   return (
     <div className="flight-results">
       <div className="flight-toolbar">
-        <div className="flight-filters">
-          <div className="filter-col">
-            <label className="filter-title">Airlines</label>
-            <div className="airlines-list">
-              {airlines.map(a => (
-                <label key={a} className="airline-check">
-                  <input
-                    type="checkbox"
-                    checked={airlinesSel.includes(a)}
-                    onChange={e => setAirlinesSel(prev => e.target.checked ? [...prev, a] : prev.filter(x => x !== a))}
-                  />
-                  <span>{a}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Max Price</label>
-            <div className="price-row">
-              <input className="price-range" type="range" min={0} max={priceCeil} value={priceMax} onChange={e => setPriceMax(Number(e.target.value))} />
-              <span className="price-value">Up to {filtered[0]?.currency || flights[0]?.currency || 'USD'} {priceMax}</span>
-            </div>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Departure Time</label>
-            <select className="filter-select" value={timeSel} onChange={e => setTimeSel(e.target.value as any)}>
-              <option value="any">Any</option>
-              <option value="morning">Morning (6AM - 12PM)</option>
-              <option value="afternoon">Afternoon (12PM - 6PM)</option>
-              <option value="evening">Evening (6PM - 12AM)</option>
-              <option value="night">Night (12AM - 6AM)</option>
-            </select>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Stops</label>
-            <select className="filter-select" value={String(stopsSel)} onChange={e => setStopsSel(e.target.value === 'any' ? 'any' : (e.target.value === '2' ? 2 : Number(e.target.value) as any))}>
-              <option value="any">Any</option>
-              <option value="0">Non-stop</option>
-              <option value="1">1 Stop</option>
-              <option value="2">2+ Stops</option>
-            </select>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Travel Class</label>
-            <select className="filter-select" value={classSel} onChange={e => setClassSel(e.target.value)}>
-              {classes.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="filter-col wide">
-            <label className="filter-title">Search</label>
-            <input className="search-input flight-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search airport or airline" />
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Sort by</label>
-            <select className="filter-select" value={sort} onChange={e => setSort(e.target.value as any)}>
-              <option value="priceAsc">Price (Low to High)</option>
-              <option value="durationAsc">Duration (Short to Long)</option>
-              <option value="departAsc">Departure (Early to Late)</option>
-            </select>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <strong>Filters</strong>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button className="filter-trigger" onClick={() => { setShowFilters(v => !v); }}>{showFilters ? 'Hide Filters' : 'Show Filters'}</button>
+            <button className="filter-trigger" onClick={() => { setQuery(''); setPriceMax(priceCeil); setAirlinesSel([]); setStopsSel('any'); setClassSel('Any'); setTimeSel('any'); setSort('priceAsc'); }}>Reset All</button>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="flight-filters">
+            <div className="filter-col">
+              <label className="filter-title">Airlines</label>
+              <div className="airlines-list">
+                {airlines.map(a => (
+                  <label key={a} className="airline-check">
+                    <input
+                      type="checkbox"
+                      checked={airlinesSel.includes(a)}
+                      onChange={e => setAirlinesSel(prev => e.target.checked ? [...prev, a] : prev.filter(x => x !== a))}
+                    />
+                    <span>{a}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Max Price</label>
+              <div className="price-row">
+                <input className="price-range" type="range" min={0} max={priceCeil} value={priceMax} onChange={e => setPriceMax(Number(e.target.value))} />
+                <span className="price-value">Up to {filtered[0]?.currency || flights[0]?.currency || 'USD'} {priceMax}</span>
+              </div>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Departure Time</label>
+              <select className="filter-select" value={timeSel} onChange={e => setTimeSel(e.target.value as any)}>
+                <option value="any">Any</option>
+                <option value="morning">Morning (6AM - 12PM)</option>
+                <option value="afternoon">Afternoon (12PM - 6PM)</option>
+                <option value="evening">Evening (6PM - 12AM)</option>
+                <option value="night">Night (12AM - 6AM)</option>
+              </select>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Stops</label>
+              <select className="filter-select" value={String(stopsSel)} onChange={e => setStopsSel(e.target.value === 'any' ? 'any' : (e.target.value === '2' ? 2 : Number(e.target.value) as any))}>
+                <option value="any">Any</option>
+                <option value="0">Non-stop</option>
+                <option value="1">1 Stop</option>
+                <option value="2">2+ Stops</option>
+              </select>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Travel Class</label>
+              <select className="filter-select" value={classSel} onChange={e => setClassSel(e.target.value)}>
+                {classes.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="filter-col wide">
+              <label className="filter-title">Search</label>
+              <input className="search-input flight-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search airport or airline" />
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Sort by</label>
+              <select className="filter-select" value={sort} onChange={e => setSort(e.target.value as any)}>
+                <option value="priceAsc">Price (Low to High)</option>
+                <option value="durationAsc">Duration (Short to Long)</option>
+                <option value="departAsc">Departure (Early to Late)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="results-meta">Showing {filtered.length} of {flights.length} flights</div>
       </div>
 
