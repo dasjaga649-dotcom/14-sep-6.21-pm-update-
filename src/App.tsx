@@ -527,7 +527,7 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
       )}
 
       <div className="hotel-grid" role="list">
-        {filtered.map((h, i) => (
+        {filtered.slice((page-1)*pageSize, page*pageSize).map((h, i) => (
           <article key={h.id || i} className="hotel-card" role="listitem">
             {h.imageUrl && <img className="hotel-img" src={h.imageUrl} alt={h.name} loading="lazy" />}
             <div className="hotel-body">
@@ -552,6 +552,13 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
           </article>
         ))}
       </div>
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', padding: '10px' }}>
+        <button className="btn secondary" type="button" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}>Previous</button>
+        <div style={{ fontSize: 13 }}>{Math.min((page-1)*pageSize+1, filtered.length)} - {Math.min(page*pageSize, filtered.length)} of {filtered.length}</div>
+        <button className="btn" type="button" onClick={() => setPage(p => Math.min(p+1, Math.ceil(filtered.length / pageSize)))} disabled={page*pageSize>=filtered.length}>Next</button>
+      </div>
+
     </section>
   );
 }
