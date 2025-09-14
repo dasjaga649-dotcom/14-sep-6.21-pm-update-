@@ -726,97 +726,91 @@ export default function App() {
   }
 
   function toAssistantMessage(data: unknown, contentType?: string): ChatMessage {
+    // Try to extract JSON object embedded inside markdown text (fenced code block or plain JSON substring)
+    function extractJsonFromMarkdown(text: string): any | null {
+      if (!text) return null;
+      try {
+        // Match ```json ... ``` or ``` ... ``` code block
+        const codeBlock = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
+        const candidate = codeBlock ? codeBlock[1].trim() : null;
+        if (candidate) {
+          try { return JSON.parse(candidate); } catch(e) { /* fallthrough */ }
+        }
+        // Fallback: find first {...} substring that looks like JSON
+        const braceMatch = /([\{\[][\s\S]*[\}\]])/.exec(text);
+        if (braceMatch) {
+          const c = braceMatch[1];
+          try { return JSON.parse(c); } catch(e) { /* fallthrough */ }
+        }
+      } catch (e) {
+        // ignore
+      }
+      return null;
+    }
+
+    // Process a parsed object and return the best ChatMessage representation
+    function processParsedObject(obj: any): ChatMessage {
+      if (!obj || typeof obj !== 'object') return { role: 'assistant', kind: 'json', json: obj };
+
+      // Prefer structured cards (flights/hotels/itinerary/attractions) when present
+      const flights = normalizeFlights(obj);
+      if (flights) return { role: 'assistant', kind: 'flights', flights };
+
+      const hotels = normalizeHotels(obj);
+      if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
+
+      const iti = normalizeItinerary(obj);
+      if (iti) return { role: 'assistant', kind: 'itinerary', itinerary: iti };
+
+      const attractions = normalizeAttractions(obj);
+      if (attractions) return { role: 'assistant', kind: 'attractions', attractions };
+
+      // If plain text fields are provided, render them as markdown
+      if (typeof obj.text === 'string') return { role: 'assistant', kind: 'markdown', text: obj.text };
+      if (typeof obj.reply === 'string') return { role: 'assistant', kind: 'markdown', text: obj.reply };
+
+      // Fallback: show raw JSON
+      return { role: 'assistant', kind: 'json', json: obj };
+    }
+
+    // If server explicitly sent JSON content-type, parse and process
     if (contentType?.includes('application/json')) {
       try {
         const obj = typeof data === 'string' ? JSON.parse(data) : data;
-        // If object contains a plain text reply, show as markdown/text
-        if (obj && typeof (obj as any).text === 'string') {
-          const t = (obj as any).text as string;
-          return { role: 'assistant', kind: 'markdown', text: t };
-        }
-
-        const isFlights = obj && (obj.text === '[flightData]' || (obj as any).type === 'flightData' || (obj as any).kind === 'flights');
-        if (isFlights) {
-          const flights = normalizeFlights(obj);
-          if (flights) return { role: 'assistant', kind: 'flights', flights };
-        }
-        const hotels = normalizeHotels(obj);
-        if ((obj as any)?.text === 'HotelData' || hotels) {
-          if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-        }
-        const iti = normalizeItinerary(obj);
-        if (iti) {
-          return { role: 'assistant', kind: 'itinerary', itinerary: iti };
-        }
-        const shouldShowCards = obj && (obj.text === '[attractionsData]' || obj.type === 'attractionsData' || obj.kind === 'attractions');
-        const normalized = normalizeAttractions(obj);
-        if (shouldShowCards && normalized) {
-          return { role: 'assistant', kind: 'attractions', attractions: normalized };
-        }
-        return { role: 'assistant', kind: 'json', json: obj };
+        return processParsedObject(obj);
       } catch {
         return { role: 'assistant', kind: 'json', json: data };
       }
     }
+
+    // If server sent markdown/plain text, try to extract JSON from it first
     if (contentType?.includes('text/markdown') || contentType?.includes('text/plain')) {
+      if (typeof data === 'string') {
+        const parsed = extractJsonFromMarkdown(data);
+        if (parsed) return processParsedObject(parsed);
+        return { role: 'assistant', kind: 'markdown', text: data };
+      }
+      // non-string markdown - fallback to show as markdown
       return { role: 'assistant', kind: 'markdown', text: typeof data === 'string' ? data : JSON.stringify(data, null, 2) };
     }
+
+    // If data is a string, attempt to parse JSON; if fails, try to extract JSON from markdown content; otherwise show markdown
     if (typeof data === 'string') {
       try {
         const parsed = JSON.parse(data);
-        // Prefer a plain text field if present
-        if (parsed && typeof (parsed as any).text === 'string') {
-          return { role: 'assistant', kind: 'markdown', text: (parsed as any).text as string };
-        }
-        if ((parsed as any)?.text === '[flightData]' || (parsed as any)?.type === 'flightData' || (parsed as any)?.kind === 'flights') {
-          const flights = normalizeFlights(parsed);
-          if (flights) return { role: 'assistant', kind: 'flights', flights };
-        }
-        const hotels = normalizeHotels(parsed);
-        if ((parsed as any)?.text === 'HotelData' || hotels) {
-          if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-        }
-        const iti = normalizeItinerary(parsed);
-        if (iti) {
-          return { role: 'assistant', kind: 'itinerary', itinerary: iti };
-        }
-        const normalized = normalizeAttractions(parsed);
-        const shouldShowCards = (parsed as any)?.text === '[attractionsData]' || (parsed as any)?.type === 'attractionsData' || (parsed as any)?.kind === 'attractions';
-        if (shouldShowCards && normalized) {
-          return { role: 'assistant', kind: 'attractions', attractions: normalized };
-        }
-        return { role: 'assistant', kind: 'json', json: parsed };
+        return processParsedObject(parsed);
       } catch {
+        const extracted = extractJsonFromMarkdown(data);
+        if (extracted) return processParsedObject(extracted);
         return { role: 'assistant', kind: 'markdown', text: data };
       }
     }
+
+    // If data is already an object, process it
     if (data && typeof data === 'object') {
-      const anyData = data as Record<string, unknown>;
-      if (typeof (anyData as any).text === 'string') {
-        return { role: 'assistant', kind: 'markdown', text: (anyData as any).text as string };
-      }
-      if ((anyData as any)?.text === '[flightData]' || (anyData as any)?.type === 'flightData' || (anyData as any)?.kind === 'flights') {
-        const flights = normalizeFlights(anyData);
-        if (flights) return { role: 'assistant', kind: 'flights', flights };
-      }
-      const hotels = normalizeHotels(anyData);
-      if ((anyData as any)?.text === 'HotelData' || hotels) {
-        if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-      }
-      const iti = normalizeItinerary(anyData);
-      if (iti) {
-        return { role: 'assistant', kind: 'itinerary', itinerary: iti };
-      }
-      const shouldShowCards = (anyData as any)?.text === '[attractionsData]' || (anyData as any)?.type === 'attractionsData' || (anyData as any)?.kind === 'attractions';
-      const normalized = normalizeAttractions(anyData);
-      if (shouldShowCards && normalized) {
-        return { role: 'assistant', kind: 'attractions', attractions: normalized };
-      }
-      if (typeof (anyData as any).reply === 'string') {
-        return { role: 'assistant', kind: 'markdown', text: (anyData as any).reply as string };
-      }
-      return { role: 'assistant', kind: 'json', json: data };
+      return processParsedObject(data);
     }
+
     return { role: 'assistant', kind: 'text', text: String(data) };
   }
 
