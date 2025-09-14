@@ -728,6 +728,12 @@ export default function App() {
     if (contentType?.includes('application/json')) {
       try {
         const obj = typeof data === 'string' ? JSON.parse(data) : data;
+        // If object contains a plain text reply, show as markdown/text
+        if (obj && typeof (obj as any).text === 'string') {
+          const t = (obj as any).text as string;
+          return { role: 'assistant', kind: 'markdown', text: t };
+        }
+
         const isFlights = obj && (obj.text === '[flightData]' || (obj as any).type === 'flightData' || (obj as any).kind === 'flights');
         if (isFlights) {
           const flights = normalizeFlights(obj);
@@ -757,6 +763,10 @@ export default function App() {
     if (typeof data === 'string') {
       try {
         const parsed = JSON.parse(data);
+        // Prefer a plain text field if present
+        if (parsed && typeof (parsed as any).text === 'string') {
+          return { role: 'assistant', kind: 'markdown', text: (parsed as any).text as string };
+        }
         if ((parsed as any)?.text === '[flightData]' || (parsed as any)?.type === 'flightData' || (parsed as any)?.kind === 'flights') {
           const flights = normalizeFlights(parsed);
           if (flights) return { role: 'assistant', kind: 'flights', flights };
@@ -781,6 +791,9 @@ export default function App() {
     }
     if (data && typeof data === 'object') {
       const anyData = data as Record<string, unknown>;
+      if (typeof (anyData as any).text === 'string') {
+        return { role: 'assistant', kind: 'markdown', text: (anyData as any).text as string };
+      }
       if ((anyData as any)?.text === '[flightData]' || (anyData as any)?.type === 'flightData' || (anyData as any)?.kind === 'flights') {
         const flights = normalizeFlights(anyData);
         if (flights) return { role: 'assistant', kind: 'flights', flights };
