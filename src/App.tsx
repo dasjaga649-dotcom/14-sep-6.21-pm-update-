@@ -887,7 +887,20 @@ export default function App() {
         <div className="chat-widget-header">
           <div className="chat-widget-title">Chatbot</div>
           <div className="chat-endpoint">{apiBase.replace(/\/$/, '')}/chat</div>
-          <button className="chat-close" aria-label="Close" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            className="chat-expand"
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            onClick={() => setExpanded(v => !v)}
+            title={expanded ? 'Collapse to mobile' : 'Expand to desktop'}
+          >
+            {expanded ? (
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M6 10h2V6h4V4H6v6zm12 4h-2v4h-4v2h6v-6zM6 14H4v6h6v-2H6v-4zm12-8v2h-4V4h-2v6h6V6z"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M4 4h8v2H6v6H4V4zm16 0v8h-2V6h-6V4h8zM4 20v-8h2v6h6v2H4zm16-8v8h-8v-2h6v-6h2z"/></svg>
+            )}
+          </button>
+          <button className="chat-close" aria-label="Close" onClick={() => { setOpen(false); setExpanded(false); }}>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M18.3 5.7a1 1 0 0 0-1.4-1.4L12 9.17 7.1 4.3A1 1 0 1 0 5.7 5.7L10.59 10.6 5.7 15.49a1 1 0 1 0 1.4 1.42L12 12l4.9 4.91a1 1 0 1 0 1.4-1.42L13.41 10.6 18.3 5.7Z"/></svg>
           </button>
         </div>
