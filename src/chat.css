@@ -1,0 +1,238 @@
+/* Layout (unchanged core styles kept) */
+.chat-layout { width: 100%; max-width: 720px; margin: 0 auto; padding: 16px; }
+.chat-header { display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0 0 12px; }
+.chat-title { margin: 0; font-size: 20px; }
+.chat-endpoint { font-size: 12px; opacity: .8; text-align: right; word-break: break-all; }
+
+/* Messages */
+.chat-messages { width: 100%; max-height: 50vh; overflow: auto; display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; }
+.msg { padding: 8px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.08); }
+.msg-user { align-self: flex-end; background: rgba(97, 218, 251, 0.25); }
+.msg-assistant { align-self: flex-start; }
+
+/* Markdown */
+.md { line-height: 1.5; }
+.md h1, .md h2, .md h3 { margin: 8px 0; font-weight: 600; }
+.md p { margin: 6px 0; }
+.md ul, .md ol { padding: 0 0 0 20px; margin: 6px 0; }
+.md code { padding: 2px 4px; border-radius: 4px; background: rgba(0,0,0,0.06); }
+.md pre { margin: 8px 0; }
+
+/* JSON block */
+.json-pre { margin: 6px 0; padding: 10px; border-radius: 8px; background: #f6f8fa; color: #000; overflow: auto; }
+.json-code { font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; font-size: 12px; }
+
+/* Launcher */
+.chat-launcher { position: fixed; right: 16px; bottom: 16px; width: 56px; height: 56px; border-radius: 50%; border: 0; background: #61dafb; color: #000; display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,0,0,0.35); cursor: pointer; z-index: 1000; }
+.chat-launcher .icon { display: block; }
+.chat-launcher:active { transform: translateY(1px); }
+
+/* Overlay */
+.chat-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 999; }
+.chat-overlay.show { opacity: 1; pointer-events: auto; }
+
+/* Base widget */
+.chat-widget { position: fixed; right: 16px; bottom: 84px; width: 360px; max-width: calc(100% - 32px); background: #fff; color: #000; border-radius: 16px; box-shadow: 0 16px 40px rgba(0,0,0,0.15); display: grid; grid-template-rows: auto 1fr auto; opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity .2s ease, transform .2s ease; z-index: 1000; }
+.chat-widget.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.chat-widget-header { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px; padding: 10px 12px; background: #fff; border-top-left-radius: 16px; border-top-right-radius: 16px; }
+.chat-widget-title { font-weight: 600; }
+.chat-close { border: 0; background: transparent; cursor: pointer; padding: 6px; border-radius: 6px; }
+.chat-widget-body { padding: 10px 12px; overflow: hidden; display: grid; grid-template-rows: 1fr auto; height: auto; }
+
+/* iPhone-like bubbles */
+.iphone-chat { display: flex; flex-direction: column; gap: 8px; overflow: auto; padding-right: 4px; }
+.bubble { max-width: 80%; padding: 8px 12px; border-radius: 18px; line-height: 1.4; word-wrap: break-word; }
+.bubble-user { align-self: flex-end; background: #61dafb; color: #000; border-bottom-right-radius: 4px; }
+.bubble-assistant { align-self: flex-start; background: #f2f2f7; color: #000; border-bottom-left-radius: 4px; }
+.bubble-cards { align-self: stretch; background: transparent; padding: 0; max-width: 100%; }
+
+/* Input */
+.chat-widget-input { display: grid; grid-template-columns: 1fr auto; gap: 10px; padding: 10px 14px 18px; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; background: #fff; align-items: center; }
+.composer { display: flex; align-items: center; gap: 8px; border: 1px solid rgba(0,0,0,0.12); background: #f2f2f7; color: #000; border-radius: 22px; padding: 6px 8px; }
+.composer-icon { width: 28px; height: 28px; border: 0; background: transparent; color: #000; border-radius: 50%; display: inline-grid; place-items: center; opacity: .7; cursor: pointer; }
+.composer-icon:active { transform: scale(0.98); }
+.prompt-input { background: transparent; color: #000; border: 0; border-radius: 0; padding: 8px; height: 38px; flex: 1; }
+.prompt-input:focus { outline: none; }
+.send-btn { background: #61dafb; color: #000; border: 1px solid rgba(255,255,255,0.2); border-radius: 22px; padding: 0; width: 44px; height: 44px; display: inline-grid; place-items: center; }
+.chat-widget.mobile-frame .chat-messages { height: 100%; max-height: none; }
+
+/* Alerts */
+.chat-error { background: #8b0000; color: #fff; padding: 8px 12px; border-radius: 8px; margin: 8px 12px; }
+.chat-form .row { display: flex; flex-direction: column; gap: 6px; margin: 0 0 10px; }
+.label { font-size: 12px; opacity: .9; }
+.input, .textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.2); background: #fff; color: #000; }
+.actions { display: flex; justify-content: flex-end; }
+.btn { padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); background: #61dafb; color: #000; cursor: pointer; }
+.btn:disabled { opacity: .6; cursor: not-allowed; }
+
+/* Attractions cards */
+.attractions-wrapper { display: grid; gap: 12px; }
+.attractions-toolbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.search-box { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid rgba(0,0,0,0.12); background: #fff; color: #000; border-radius: 999px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.search-input { border: 0; outline: none; background: transparent; color: #000; width: 100%; }
+.filter-group { position: relative; }
+.filter-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 0; border-radius: 999px; background: #ff6b6b; color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.08); cursor: pointer; }
+.filter-panel { position: absolute; right: 0; top: calc(100% + 8px); width: 240px; background: #fff; color: #000; border-radius: 12px; box-shadow: 0 12px 24px rgba(0,0,0,0.12); border: 1px solid rgba(0,0,0,0.06); padding: 10px; z-index: 5; }
+.filter-row { display: grid; gap: 6px; margin: 0 0 8px; }
+.filter-label { font-size: 12px; opacity: .8; }
+.filter-select { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #000; }
+
+.attractions-cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.attraction-card { background: #fff; color: #000; border-radius: 16px; box-shadow: 0 6px 18px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid rgba(0,0,0,0.06); }
+.attraction-image-wrap { width: 100%; aspect-ratio: 16/9; background: #f2f2f7; }
+.attraction-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+.attraction-body { padding: 12px; display: grid; gap: 8px; }
+.attraction-title { margin: 0; font-size: 16px; font-weight: 600; }
+.attraction-meta { display: flex; align-items: center; gap: 12px; font-size: 12px; opacity: .85; }
+.attraction-location { display: inline-flex; align-items: center; gap: 4px; }
+.attraction-rating { display: inline-flex; align-items: center; gap: 4px; }
+.attraction-desc { margin: 0; font-size: 13px; color: #000; opacity: .9; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.attraction-link { color: #61dafb; font-weight: 600; font-size: 13px; text-decoration: none; }
+
+.attractions-pagination { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 0 2px; }
+.page-btn { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #000; display: grid; place-items: center; }
+.page-btn:disabled { opacity: .5; }
+.page-indicator { font-size: 12px; opacity: .85; }
+
+/* Flight results */
+.flight-results { display: grid; gap: 12px; }
+.flight-toolbar { display: grid; gap: 8px; }
+.flight-filters { display: grid; gap: 10px; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: end; }
+.filter-col { display: grid; gap: 6px; }
+.filter-col.wide { grid-column: span 2; }
+.filter-title { font-size: 12px; opacity: .8; }
+.airlines-list { display: grid; gap: 6px; max-height: 120px; overflow: auto; padding-right: 4px; }
+.airline-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.price-row { display: flex; align-items: center; gap: 8px; }
+.price-range { width: 100%; }
+.price-value { font-size: 12px; opacity: .85; }
+.flight-search { border: 1px solid rgba(0,0,0,0.12); background: #fff; color: #000; border-radius: 8px; padding: 8px; }
+.results-meta { font-size: 12px; opacity: .8; }
+
+.flight-list { display: grid; gap: 10px; }
+.flight-card { display: grid; grid-template-columns: 1fr auto; align-items: center; background: #fff; color: #000; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 18px rgba(0,0,0,0.08); padding: 10px; }
+.flight-left { display: grid; gap: 8px; }
+.flight-times { display: grid; grid-template-columns: repeat(3, auto); gap: 16px; align-items: center; }
+.time-col { display: grid; gap: 2px; text-align: left; }
+.time-val { font-weight: 700; font-size: 18px; }
+.airport-code { font-size: 12px; opacity: .8; }
+.date-small { font-size: 10px; opacity: .7; }
+.route-col { display: grid; gap: 2px; text-align: center; justify-items: center; }
+.duration { font-size: 13px; font-weight: 600; }
+.stops { font-size: 12px; opacity: .85; }
+.airline-row { display: inline-flex; align-items: center; gap: 8px; }
+.airline-logo { width: 28px; height: 28px; object-fit: contain; }
+.airline-name { font-weight: 600; }
+.class-badge { background: #f2f2f7; color: #000; border-radius: 999px; padding: 2px 8px; font-size: 12px; }
+.flight-right { display: grid; gap: 8px; justify-items: end; align-items: center; }
+.price-tag { font-weight: 800; font-size: 16px; }
+.select-flight { background: #61dafb; color: #000; border-radius: 999px; padding: 8px 12px; border: 1px solid rgba(255,255,255,0.2); }
+
+@media (max-width: 720px) {
+  .flight-filters { grid-template-columns: 1fr 1fr; }
+  .filter-col.wide { grid-column: span 2; }
+  .flight-times { grid-template-columns: 1fr; gap: 8px; }
+  .flight-card { grid-template-columns: 1fr; justify-items: start; }
+  .flight-right { justify-items: start; }
+}
+
+/* Itinerary card */
+.itinerary-wrap { background: #fff; color: #000; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 6px 18px rgba(0,0,0,0.08); overflow: hidden; display: grid; gap: 12px; }
+.itinerary-hero { position: relative; height: 160px; background: #f2f2f7; }
+.itinerary-hero-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.itinerary-hero-overlay { position: absolute; inset: 0; display: grid; align-content: end; gap: 6px; padding: 12px; background: linear-gradient(to top, rgba(0,0,0,0.45), rgba(0,0,0,0)); color: #fff; }
+.itinerary-title { margin: 0; font-size: 20px; font-weight: 700; }
+.itinerary-subtitle { margin: 0; opacity: .95; }
+.itinerary-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat-pill { background: rgba(255,255,255,0.85); color: #000; border-radius: 999px; padding: 2px 8px; font-size: 12px; }
+.itinerary-desc { margin: 0 12px; font-size: 13px; opacity: .9; }
+.section-heading { margin: 0 12px; font-size: 14px; font-weight: 700; }
+.itinerary-days { display: grid; gap: 10px; padding: 0 0 6px; }
+.day-card { background: #fff; border-top: 1px solid rgba(0,0,0,0.06); padding: 8px 12px; display: grid; gap: 8px; }
+.day-header { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: center; }
+.day-index { width: 24px; height: 24px; border-radius: 50%; background: #61dafb; color: #000; display: grid; place-items: center; font-weight: 700; }
+.day-title { font-weight: 600; }
+.day-sub { font-size: 12px; opacity: .8; }
+.activity-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.activity-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; background: #f8f9fb; border-radius: 12px; padding: 8px; }
+.activity-thumb { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; }
+.activity-title { font-weight: 600; }
+.activity-desc { font-size: 12px; opacity: .85; }
+.activity-rating { font-size: 12px; opacity: .9; }
+
+.itinerary-explore { display: grid; gap: 8px; padding: 0 0 12px; }
+.explore-track { display: grid; grid-auto-flow: column; grid-auto-columns: 200px; overflow-x: auto; gap: 10px; padding: 0 12px; }
+.explore-card { background: #fff; color: #000; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; box-shadow: 0 6px 16px rgba(0,0,0,0.06); overflow: hidden; }
+.explore-img { width: 100%; height: 110px; object-fit: cover; display: block; }
+.explore-body { padding: 8px 10px; display: flex; align-items: center; justify-content: space-between; }
+.explore-title { font-weight: 600; font-size: 13px; }
+.explore-rating { font-size: 12px; opacity: .85; }
+
+/* Hotels */
+.hotel-results { display: grid; gap: 12px; }
+.hotel-toolbar { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 10px; }
+.hotel-toolbar-left { display: flex; gap: 8px; align-items: center; }
+.filter-btn { border-radius: 999px; padding: 6px 12px; }
+.hotel-search { border: 1px solid rgba(0,0,0,0.12); background: #fff; color: #000; border-radius: 8px; padding: 8px; min-width: 160px; }
+.hotel-toolbar-right { display: inline-flex; align-items: center; gap: 8px; }
+
+.hotel-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.hotel-card { background: #fff; color: #000; border-radius: 16px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 6px 18px rgba(0,0,0,0.08); overflow: hidden; display: grid; grid-template-columns: 140px 1fr; gap: 10px; }
+.hotel-img { width: 140px; height: 120px; object-fit: cover; display: block; }
+.hotel-body { padding: 10px; display: grid; gap: 6px; }
+.hotel-title-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; }
+.hotel-name { margin: 0; font-size: 16px; font-weight: 700; }
+.hotel-price { color: #000; font-weight: 800; }
+.hotel-meta { display: flex; align-items: center; gap: 10px; font-size: 12px; opacity: .9; flex-wrap: wrap; }
+.hotel-rating { display: inline-flex; align-items: center; gap: 4px; }
+.hotel-location { opacity: .85; }
+.hotel-amenities { display: flex; flex-wrap: wrap; gap: 6px; }
+.amenity-pill { background: #f2f2f7; color: #000; border-radius: 999px; padding: 2px 8px; font-size: 12px; }
+.amenity-more { font-size: 12px; opacity: .85; }
+.view-details { background: #61dafb; color: #000; border-radius: 8px; }
+
+/* Filter modal */
+.hotel-filter-modal { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,0.45); z-index: 10; }
+.hotel-filter-panel { width: min(560px, calc(100% - 32px)); background: #fff; color: #000; border-radius: 12px; box-shadow: 0 16px 44px rgba(0,0,0,0.25); padding: 12px; display: grid; gap: 12px; max-height: 80vh; overflow: auto; }
+.filter-header { display: flex; align-items: center; justify-content: space-between; }
+.close-x { border: 0; background: transparent; font-size: 20px; line-height: 1; cursor: pointer; }
+.filter-block { display: grid; gap: 8px; }
+.filter-subtitle { font-weight: 700; }
+.amenities-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.amenity-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.rating-opts { display: grid; gap: 6px; }
+.rating-radio { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; }
+.price-range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.price-input { padding: 8px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.2); }
+.filter-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.btn.secondary { background: #f2f2f7; color: #000; border: 1px solid rgba(0,0,0,0.12); }
+
+@media (max-width: 580px) {
+  .hotel-card { grid-template-columns: 1fr; }
+  .hotel-img { width: 100%; height: 160px; }
+}
+
+/* Perfect iPhone frame */
+.chat-widget.mobile-frame { --phone-w: 390px; --phone-h: 844px; --scale-x: calc((100vw - 32px) / var(--phone-w)); --scale-y: calc((100vh - 32px) / var(--phone-h)); --scale: min(var(--scale-x), var(--scale-y)); width: var(--phone-w); height: var(--phone-h); left: 50%; top: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%) scale(var(--scale)); border-radius: 42px; border: 2.5px solid #000; box-shadow: 0 24px 60px rgba(0,0,0,0.35); grid-template-rows: 26px auto auto 1fr auto; padding: 0; background: #fff; }
+
+/* Notch + sensors */
+.device-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 210px; height: 32px; background: #000; border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; border-top-left-radius: 22px; border-top-right-radius: 22px; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 3; }
+.notch-speaker { width: 62px; height: 6px; background: #222; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); }
+.notch-camera { width: 12px; height: 12px; background: radial-gradient(circle at 35% 35%, #4ec3ff 0 20%, #1b6ea7 21% 50%, #000 51%); border-radius: 50%; box-shadow: 0 0 0 2px #0a0a0a; }
+
+/* Status bar below notch */
+.device-status-bar { height: 26px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 12px; color: #000; background: #fff; border-top-left-radius: 42px; border-top-right-radius: 42px; position: relative; z-index: 2; }
+.status-icons { display: flex; align-items: center; gap: 8px; }
+.status-signal, .status-wifi { width: 14px; height: 10px; border: 1.5px solid #000; border-radius: 2px; position: relative; }
+.status-wifi::before { content: ''; position: absolute; inset: 2px; border-top: 2px solid #000; border-left: 2px solid transparent; border-right: 2px solid transparent; border-bottom: 0; border-radius: 50%; }
+.status-battery { width: 20px; height: 10px; border: 1.5px solid #000; border-radius: 2px; display: inline-flex; align-items: center; padding: 1px; position: relative; }
+.status-battery::after { content: ''; position: absolute; right: -3px; top: 3px; width: 2px; height: 4px; background: #000; border-radius: 1px; }
+.battery-level { width: 62%; height: 100%; background: #000; border-radius: 1px; }
+
+/* Header/body/input inside phone */
+.chat-widget.mobile-frame .chat-widget-header { padding: 10px 14px; border-radius: 0; border-top-left-radius: 0; border-top-right-radius: 0; }
+.chat-widget.mobile-frame .chat-widget-body { padding: 10px 14px; height: auto; max-height: none; }
+.chat-widget.mobile-frame .chat-widget-input { padding: 10px 14px 18px; border-radius: 0 0 42px 42px; }
+
+/* Responsive fallback width when viewport is tiny */
+@media (max-width: 420px) { .chat-widget { width: calc(100% - 32px); } }
