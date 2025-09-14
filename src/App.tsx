@@ -748,19 +748,66 @@ export default function App() {
       return null;
     }
 
+    // Helper heuristics to detect array types
+    function isFlightArray(arr: any[]): boolean {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+      const sample = arr[0];
+      if (!sample || typeof sample !== 'object') return false;
+      const keys = Object.keys(sample).map(k => k.toLowerCase());
+      const flightHints = ['departure', 'arrival', 'flight', 'airline', 'origin', 'destination', 'departureairport', 'arrivalairport', 'departure_time', 'arrival_time'];
+      return flightHints.some(h => keys.some(k => k.includes(h)));
+    }
+
+    function isHotelArray(arr: any[]): boolean {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+      const sample = arr[0];
+      if (!sample || typeof sample !== 'object') return false;
+      const keys = Object.keys(sample).map(k => k.toLowerCase());
+      const hotelHints = ['hotel', 'price', 'rating', 'stars', 'amenity', 'room', 'checkin', 'checkout'];
+      return hotelHints.some(h => keys.some(k => k.includes(h)));
+    }
+
+    function isAttractionArray(arr: any[]): boolean {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+      const sample = arr[0];
+      if (!sample || typeof sample !== 'object') return false;
+      const keys = Object.keys(sample).map(k => k.toLowerCase());
+      const attrHints = ['attraction', 'place', 'location', 'description', 'summary', 'image', 'photo', 'placeName'];
+      return attrHints.some(h => keys.some(k => k.includes(h)));
+    }
+
     // Process a parsed object and return the best ChatMessage representation
     function processParsedObject(obj: any): ChatMessage {
       if (!obj || typeof obj !== 'object') return { role: 'assistant', kind: 'json', json: obj };
 
-      // Prefer structured cards (flights/hotels/itinerary/attractions) when present
+      // If object contains an array under common keys, inspect it first
+      const maybeArrays = [obj.flightsData, obj.dbData, obj.flights, obj.items, obj.data, obj.attractionsData, obj.attractions, obj.hotelData, obj.hotels];
+      const arr = maybeArrays.find(a => Array.isArray(a)) as any[] | undefined;
+      if (arr) {
+        if (isFlightArray(arr)) {
+          const flights = normalizeFlights({ data: arr, flightsData: arr, flights: arr, items: arr });
+          if (flights) return { role: 'assistant', kind: 'flights', flights };
+        }
+        if (isHotelArray(arr)) {
+          const hotels = normalizeHotels({ data: arr, hotels: arr, items: arr });
+          if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
+        }
+        if (isAttractionArray(arr)) {
+          const attractions = normalizeAttractions({ data: arr, attractions: arr, items: arr });
+          if (attractions) return { role: 'assistant', kind: 'attractions', attractions };
+        }
+      }
+
+      // Prefer structured cards (itinerary) when present
+      const iti = normalizeItinerary(obj);
+      if (iti) return { role: 'assistant', kind: 'itinerary', itinerary: iti };
+
+      // As a fallback, attempt specific normalizers against the whole object (keeps previous behavior)
       const flights = normalizeFlights(obj);
       if (flights) return { role: 'assistant', kind: 'flights', flights };
 
       const hotels = normalizeHotels(obj);
       if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-
-      const iti = normalizeItinerary(obj);
-      if (iti) return { role: 'assistant', kind: 'itinerary', itinerary: iti };
 
       const attractions = normalizeAttractions(obj);
       if (attractions) return { role: 'assistant', kind: 'attractions', attractions };
