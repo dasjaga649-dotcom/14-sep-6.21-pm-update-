@@ -707,11 +707,12 @@ export default function App() {
   }
 
   function normalizeHotels(input: any): Hotel[] | null {
+    const textLow = typeof input?.text === 'string' ? input.text.toLowerCase() : undefined;
     const arr: any[] | undefined = Array.isArray(input?.hotelsData) ? input.hotelsData
       : Array.isArray(input?.hotels) ? input.hotels
       : Array.isArray(input?.dbData) ? input.dbData
       : Array.isArray(input?.items) ? input.items
-      : Array.isArray(input?.data) && (input.text === 'HotelData' || input.text === '[HotelData]') ? input.data
+      : (Array.isArray(input?.data) && (textLow === 'hoteldata' || textLow === '[hoteldata]')) ? input.data
       : undefined;
     if (!arr || arr.length === 0) return null;
     return arr.map((it: any, idx: number): Hotel => {
