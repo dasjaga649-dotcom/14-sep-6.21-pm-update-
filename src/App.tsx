@@ -921,8 +921,10 @@ export default function App() {
         </div>
         <div className="chat-widget-body">
           <div className="suggestions-row">
-            {showSuggestions && ['Flight options','Hotel options','Plan a trip','My upcoming booking','Generate eticket','Cancellation charges','Cancel my flight','FAQs'].map((s,i)=>(
-              <button key={i} type="button" className="suggestion-chip">{s}</button>
+            {showSuggestions && [
+              {k:'Flight options',icon:'✈️'},{k:'Hotel options',icon:'🏨'},{k:'Plan a trip',icon:'🗺️'},{k:'My upcoming booking',icon:'📅'},{k:'Generate eticket',icon:'🎫'},{k:'Cancellation charges',icon:'💲'},{k:'Cancel my flight',icon:'❌'},{k:'FAQs',icon:'❓'}
+            ].map((s,i)=>(
+              <button key={i} type="button" className="suggestion-chip"><span className="chip-icon" aria-hidden>{s.icon}</span><span className="chip-text">{s.k}</span></button>
             ))}
           </div>
           <div className="suggestions-toggle-row">
