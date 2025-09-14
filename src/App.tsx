@@ -88,12 +88,35 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilter, setShowFilter] = useState(false);
   const [page, setPage] = useState(1);
-  const pageSize = 9;
+
+  // Responsive columns and fixed rows (max 4 rows)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [columns, setColumns] = useState(1);
+  const rows = 4;
+  const minItemWidth = 220; // matches hotel cards
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width || el.clientWidth || 1;
+        const cols = Math.max(1, Math.floor(w / minItemWidth));
+        setColumns(cols);
+      }
+    });
+    ro.observe(el);
+    const initW = el.clientWidth || 0;
+    setColumns(Math.max(1, Math.floor(initW / minItemWidth)));
+    return () => ro.disconnect();
+  }, []);
+
+  const pageSize = Math.max(1, columns * rows);
 
   const categories = useMemo(() => {
     const s = new Set<string>();
     items.forEach((a: any) => {
-      const c = a?.category ?? a?.type ?? a?.category_name ?? a?.kind ?? null;
+      const c = a?.category ?? a?.type ?? a?.category_name ?? a?.kind ?? 'Other';
       if (c) s.add(String(c));
     });
     return Array.from(s).sort((a, b) => a.localeCompare(b));
@@ -104,7 +127,7 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
     return items.filter((a: any) => {
       const cat = String(a?.category ?? a?.type ?? a?.category_name ?? 'Other');
       const matchesCat = category === 'All' || cat === category;
-      const r = typeof a?.rating === 'number' ? a.rating : 0;
+      const r = typeof a?.rating === 'number' ? a.rating : (typeof a?.rating === 'string' ? parseFloat(a.rating) : 0);
       const matchesRating = !minRating || r >= minRating;
       const text = [a.title, a.location, a.description].filter(Boolean).join(' ').toLowerCase();
       const matchesQ = !q || text.includes(q);
@@ -112,8 +135,10 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
     });
   }, [items, search, category, minRating]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  useEffect(() => { setPage(1); }, [search, category, minRating, items.length]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { setPage(1); }, [search, category, minRating, items.length, columns]);
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [totalPages]);
+
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
@@ -152,7 +177,7 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
         </div>
       </div>
 
-      <div className="attractions-cards" role="list">
+      <div className="attractions-cards" role="list" ref={containerRef}>
         {pageItems.map((a, idx) => (
           <article key={a.id ?? idx} className="attraction-card" role="listitem">
             {a.imageUrl && (
