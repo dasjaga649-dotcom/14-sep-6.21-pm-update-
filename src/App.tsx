@@ -572,7 +572,20 @@ function MessageContent({ m }: { m: ChatMessage }) {
   }
   if (m.kind === 'markdown') {
     return (
-      <div className="md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text || ''}</ReactMarkdown></div>
+      <div className="md">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            a: (props: any) => <a {...props} target="_blank" rel="noreferrer" />,
+            img: (props: any) => <img {...props} loading="lazy" alt={props.alt || ''} />,
+            table: (props: any) => <table {...props} className="md-table" />,
+            pre: (props: any) => <pre {...props} className="md-pre" />,
+            code: (props: any) => <code {...props} className={`md-code ${props.className || ''}`.trim()} />,
+          }}
+        >
+          {m.text || ''}
+        </ReactMarkdown>
+      </div>
     );
   }
   return <span>{m.text}</span>;
