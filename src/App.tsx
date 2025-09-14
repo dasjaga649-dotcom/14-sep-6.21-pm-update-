@@ -436,10 +436,30 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sort, setSort] = useState<'priceAsc' | 'priceDesc' | 'ratingDesc'>('priceAsc');
 
-  // Pagination
+  // Pagination and responsive columns
   const [page, setPage] = useState(1);
-  const pageSize = 4;
+  const [columns, setColumns] = useState(1);
+  const rows = 4; // max rows to show
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const minItemWidth = 240; // px
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width || el.clientWidth || 1;
+        const cols = Math.max(1, Math.floor(w / minItemWidth));
+        setColumns(cols);
+      }
+    });
+    ro.observe(el);
+    const initW = el.clientWidth || 0;
+    setColumns(Math.max(1, Math.floor(initW / minItemWidth)));
+    return () => ro.disconnect();
+  }, []);
+
+  const pageSize = Math.max(1, columns * rows);
 
   const allAmenities = useMemo(() => Array.from(new Set(hotels.flatMap(h => h.amenities || []))).sort((a,b)=>a.localeCompare(b)), [hotels]);
   const currency = hotels[0]?.currency || 'USD';
@@ -459,9 +479,17 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
     return arr;
   }, [hotels, query, minRating, priceMin, priceMax, selectedAmenities, sort]);
 
+  useEffect(() => {
+    // reset page when filters change
+    setPage(1);
+  }, [query, minRating, priceMin, priceMax, selectedAmenities, sort, columns]);
+
   function toggleAmenity(a: string, checked: boolean) {
     setSelectedAmenities(prev => checked ? [...prev, a] : prev.filter(x => x !== a));
   }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [totalPages]);
 
   return (
     <section className="hotel-results">
@@ -526,7 +554,7 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
         </div>
       )}
 
-      <div className="hotel-grid" role="list">
+      <div className="hotel-grid" role="list" ref={containerRef}>
         {filtered.slice((page-1)*pageSize, page*pageSize).map((h, i) => (
           <article key={h.id || i} className="hotel-card" role="listitem">
             {h.imageUrl && <img className="hotel-img" src={h.imageUrl} alt={h.name} loading="lazy" />}
