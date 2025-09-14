@@ -436,6 +436,11 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sort, setSort] = useState<'priceAsc' | 'priceDesc' | 'ratingDesc'>('priceAsc');
 
+  // Pagination
+  const [page, setPage] = useState(1);
+  const pageSize = 4;
+
+
   const allAmenities = useMemo(() => Array.from(new Set(hotels.flatMap(h => h.amenities || []))).sort((a,b)=>a.localeCompare(b)), [hotels]);
   const currency = hotels[0]?.currency || 'USD';
 
