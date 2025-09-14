@@ -221,7 +221,7 @@
 }
 
 /* Perfect iPhone frame */
-.chat-widget.mobile-frame { --phone-w: 390px; --phone-h: 844px; --scale-x: calc((100vw - 32px) / var(--phone-w)); --scale-y: calc((100vh - 32px) / var(--phone-h)); --scale: min(var(--scale-x), var(--scale-y)); width: var(--phone-w); height: var(--phone-h); left: 50%; top: 50%; right: auto; bottom: auto; transform: translate(-50%, -50%) scale(var(--scale)); border-radius: 42px; border: 2.5px solid #000; box-shadow: 0 24px 60px rgba(0,0,0,0.35); grid-template-rows: 26px auto auto 1fr auto; padding: 0; background: #fff; }
+.chat-widget.mobile-frame { --phone-w: 390px; --phone-h: 844px; --scale-x: calc((100vw - 32px) / var(--phone-w)); --scale-y: calc((100vh - 32px) / var(--phone-h)); --scale: min(var(--scale-x), var(--scale-y)); width: var(--phone-w); height: var(--phone-h); /* position at right-bottom instead of centered */ right: 16px; bottom: 84px; left: auto; top: auto; transform: translateY(0) scale(var(--scale)); border-radius: 42px; border: 2.5px solid #000; box-shadow: 0 24px 60px rgba(0,0,0,0.35); grid-template-rows: 26px auto auto 1fr auto; padding: 0; background: #fff; }
 
 /* Notch + sensors */
 .device-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 210px; height: 32px; background: #000; border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; border-top-left-radius: 22px; border-top-right-radius: 22px; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 3; }
