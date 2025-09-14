@@ -731,44 +731,52 @@ export default function App() {
       || null;
     if (!root || typeof root !== 'object') return null;
     const r: any = root;
-    const title = r.title || r.tripTitle || r.name;
-    const subtitle = r.subtitle || r.tagline;
-    const description = r.description || r.summary || r.about;
-    const coverImage = r.coverImage || r.image || r.hero || r.banner;
-    const durationDays = typeof r.durationDays === 'number' ? r.durationDays : (Array.isArray(r.days) ? r.days.length : undefined);
-    const placesVisited = typeof r.placesVisited === 'number' ? r.placesVisited : undefined;
 
+    // Support payloads that use overview and dailyPlan (user data)
+    const overview = r.overview || r.summary || null;
+    const title = r.title || overview?.title || r.tripTitle || r.name || overview?.destination;
+    const subtitle = r.subtitle || r.tagline || overview?.summary;
+    const description = r.description || overview?.summary || r.summary || r.about;
+    const coverImage = r.coverImage || r.image || r.hero || r.banner || overview?.image || undefined;
+    const durationDays = typeof (overview?.stats?.durationInDays ?? r.durationDays) === 'number' ? (overview?.stats?.durationInDays ?? r.durationDays) : (Array.isArray(r.days) ? r.days.length : undefined);
+    const placesVisited = typeof (overview?.stats?.placesVisited ?? r.placesVisited) === 'number' ? (overview?.stats?.placesVisited ?? r.placesVisited) : undefined;
+
+    // dailyPlan support
     const daysSrc: any[] = Array.isArray(r.days) ? r.days
       : Array.isArray(r.itineraryDays) ? r.itineraryDays
       : Array.isArray(r.schedule) ? r.schedule
+      : Array.isArray(r.dailyPlan) ? r.dailyPlan
+      : Array.isArray(overview?.dailyPlan) ? overview.dailyPlan
       : [];
 
     const days: ItineraryDay[] = daysSrc.map((d: any, i: number) => {
-      const title = d.title || d.name || d.heading || `Day ${i + 1}`;
+      const title = d.title || d.name || d.heading || (typeof d.day === 'number' ? `Day ${d.day}` : `Day ${i + 1}`) || `Day ${i + 1}`;
       const date = d.date || d.day || undefined;
-      const actsSrc: any[] = Array.isArray(d.activities) ? d.activities : Array.isArray(d.items) ? d.items : [];
+      const actsSrc: any[] = Array.isArray(d.activities) ? d.activities : Array.isArray(d.items) ? d.items : Array.isArray(d.activity) ? d.activity : (Array.isArray(d.activitiesList) ? d.activitiesList : []);
       const activities: ItineraryActivity[] = actsSrc.map((a: any, j: number) => {
         const ratingRaw = a.rating ?? a.stars ?? a.score;
         const rating = typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : (typeof ratingRaw === 'number' ? ratingRaw : undefined);
+        const imageUrl = a.imageUrl || a.image || a.photo || a.thumbnail || (Array.isArray(a.imageLinks) ? a.imageLinks[0] : undefined) || (Array.isArray(a.image_links) ? a.image_links[0] : undefined);
         return {
-          id: a.id ?? j,
-          title: a.title || a.name || `Activity ${j + 1}`,
-          description: a.description || a.desc || a.summary,
-          imageUrl: a.imageUrl || a.image || a.photo || a.thumbnail,
+          id: a.id ?? a.activity_id ?? j,
+          title: a.title || a.name || a.activityName || `Activity ${j + 1}`,
+          description: a.description || a.desc || a.summary || a.overview,
+          imageUrl,
           rating,
         };
       });
       return { id: d.id ?? i, title, date, activities };
     });
 
-    const moreSrc: any[] = Array.isArray(r.exploreMore) ? r.exploreMore : Array.isArray(r.recommendations) ? r.recommendations : [];
+    const moreSrc: any[] = Array.isArray(r.exploreMore) ? r.exploreMore : Array.isArray(r.recommendations) ? r.recommendations : Array.isArray(r.explore) ? r.explore : [];
     const exploreMore: ItineraryActivity[] = moreSrc.map((x: any, k: number) => {
       const ratingRaw = x.rating ?? x.stars ?? x.score;
       const rating = typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : (typeof ratingRaw === 'number' ? ratingRaw : undefined);
+      const imageUrl = x.imageUrl || x.image || x.photo || x.thumbnail || (Array.isArray(x.imageLinks) ? x.imageLinks[0] : undefined);
       return {
-        id: x.id ?? k,
+        id: x.id ?? x.activity_id ?? k,
         title: x.title || x.name || `Place ${k + 1}`,
-        imageUrl: x.imageUrl || x.image || x.photo || x.thumbnail,
+        imageUrl,
         rating,
       };
     });
