@@ -850,6 +850,14 @@ export default function App() {
     }
   }, [messages, open]);
 
+  // When opening the widget first time, add a DIYA-like welcome assistant message
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      const welcome = `Hello Guest!\nI'm your Trip Planner Bot, here to help you plan your trips with ease—just share your preferences and budget, and I'll suggest the best itinerary options including flights, hotels and more.\nFeel free to ask me anything about planning your journey, and I'll be happy to assist you!`;
+      setMessages([{ role: 'assistant', kind: 'markdown', text: welcome }]);
+    }
+  }, [open]);
+
   return (
     <div className="App">
       <header className="App-header">
