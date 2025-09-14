@@ -599,6 +599,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
   const endRef = useRef<HTMLDivElement | null>(null);
   const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 
