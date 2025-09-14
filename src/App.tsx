@@ -382,22 +382,23 @@ function ItineraryCard({ data }: { data: Itinerary }) {
   const days = data.days || [];
   const duration = data.durationDays || (Array.isArray(days) ? days.length : undefined);
   const places = data.placesVisited;
+  const [openDays, setOpenDays] = useState<Record<number, boolean>>(() => ({}));
+
+  const cover = data.coverImage || data.days?.[0]?.activities?.[0]?.imageUrl || undefined;
 
   return (
     <section className="itinerary-wrap">
       <div className="itinerary-hero">
-        {data.coverImage && <img className="itinerary-hero-img" src={data.coverImage} alt={data.title || 'Trip'} loading="lazy" />}
+        {cover && <img className="itinerary-hero-img" src={cover} alt={data.title || 'Trip'} loading="lazy" />}
         <div className="itinerary-hero-overlay">
           {data.title && <h2 className="itinerary-title">{data.title}</h2>}
-          {data.subtitle && <p className="itinerary-subtitle">{data.subtitle}</p>}
+          {data.description && <p className="itinerary-subtitle">{data.description}</p>}
           <div className="itinerary-stats">
             {typeof duration === 'number' && <span className="stat-pill">Duration: {duration} {duration === 1 ? 'Day' : 'Days'}</span>}
             {typeof places === 'number' && <span className="stat-pill">Places Visited: {places}</span>}
           </div>
         </div>
       </div>
-
-      {data.description && <p className="itinerary-desc">{data.description}</p>}
 
       {Array.isArray(days) && days.length > 0 && (
         <div className="itinerary-days">
@@ -410,8 +411,12 @@ function ItineraryCard({ data }: { data: Itinerary }) {
                   <div className="day-title">{d.title || `Day ${i + 1}`}</div>
                   {d.date && <div className="day-sub">{d.date}</div>}
                 </div>
+                <div style={{ marginLeft: 'auto' }}>
+                  <button className="btn" onClick={() => setOpenDays(prev => ({ ...prev, [i]: !prev[i] }))} aria-expanded={!!openDays[i]}>{openDays[i] ? 'Hide' : `${d.activities?.length || 0} activities`}</button>
+                </div>
               </div>
-              {Array.isArray(d.activities) && d.activities.length > 0 && (
+
+              {openDays[i] !== false && Array.isArray(d.activities) && d.activities.length > 0 && (
                 <ul className="activity-list">
                   {d.activities.map((a, j) => (
                     <li key={a.id ?? j} className="activity-item">
