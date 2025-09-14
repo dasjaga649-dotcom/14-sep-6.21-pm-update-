@@ -600,6 +600,9 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [apiBaseInput, setApiBaseInput] = useState<string>(typeof window !== 'undefined' ? (window.localStorage.getItem('apiBase') || process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000') : (process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000'));
+  const [apiTestResult, setApiTestResult] = useState<string | null>(null);
   const endRef = useRef<HTMLDivElement | null>(null);
   const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 
