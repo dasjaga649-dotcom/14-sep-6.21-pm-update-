@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { sendChat } from './api/chat';
+import { setApiBase } from './api/client';
 
 type Attraction = {
   id?: string | number;
