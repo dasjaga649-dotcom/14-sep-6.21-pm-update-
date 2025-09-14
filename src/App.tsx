@@ -599,7 +599,6 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(true);
   const endRef = useRef<HTMLDivElement | null>(null);
   const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 
@@ -870,7 +869,7 @@ export default function App() {
           type="button"
           aria-label="Open chat"
           className="chat-launcher"
-          onClick={() => { setOpen(true); setExpanded(true); setShowSuggestions(true); }}
+          onClick={() => { setOpen(true); setExpanded(true); }}
         >
           <svg className="icon" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
             <path fill="#000" d="M12 2a1 1 0 0 1 1 1v1.05A7.5 7.5 0 0 1 20.5 11v3.5A3.5 3.5 0 0 1 17 18h-1.382l-2.724 2.724A1.75 1.75 0 0 1 9 19.75V18H7a3.5 3.5 0 0 1-3.5-3.5V11A7.5 7.5 0 0 1 11 4.05V3a1 1 0 0 1 1-1Zm-3.75 9.25a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm7.5 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z"/>
@@ -920,16 +919,6 @@ export default function App() {
           </button>
         </div>
         <div className="chat-widget-body">
-          <div className="suggestions-row">
-            {showSuggestions && [
-              {k:'Flight options',icon:'✈️'},{k:'Hotel options',icon:'🏨'},{k:'Plan a trip',icon:'🗺️'},{k:'My upcoming booking',icon:'📅'},{k:'Generate eticket',icon:'🎫'},{k:'Cancellation charges',icon:'💲'},{k:'Cancel my flight',icon:'❌'},{k:'FAQs',icon:'❓'}
-            ].map((s,i)=>(
-              <button key={i} type="button" className="suggestion-chip"><span className="chip-icon" aria-hidden>{s.icon}</span><span className="chip-text">{s.k}</span></button>
-            ))}
-          </div>
-          <div className="suggestions-toggle-row">
-            <button type="button" className="hide-suggestions" onClick={()=>setShowSuggestions(s=>!s)}>{showSuggestions? 'Hide suggestions' : 'Show suggestions'}</button>
-          </div>
           <div className="chat-messages iphone-chat">
             {messages.map((m, i) => (
               <div
