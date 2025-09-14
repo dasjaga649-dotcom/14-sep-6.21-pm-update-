@@ -913,9 +913,12 @@ export default function App() {
         </div>
         <div className="chat-widget-body">
           <div className="suggestions-row">
-            {['Flight options','Hotel options','Plan a trip','My upcoming booking','Generate eticket','Cancellation charges','Cancel my flight','FAQs'].map((s,i)=>(
+            {showSuggestions && ['Flight options','Hotel options','Plan a trip','My upcoming booking','Generate eticket','Cancellation charges','Cancel my flight','FAQs'].map((s,i)=>(
               <button key={i} type="button" className="suggestion-chip">{s}</button>
             ))}
+          </div>
+          <div className="suggestions-toggle-row">
+            <button type="button" className="hide-suggestions" onClick={()=>setShowSuggestions(s=>!s)}>{showSuggestions? 'Hide suggestions' : 'Show suggestions'}</button>
           </div>
           <div className="chat-messages iphone-chat">
             {messages.map((m, i) => (
