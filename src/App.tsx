@@ -651,7 +651,14 @@ export default function App() {
   }
 
   function normalizeItinerary(input: any): Itinerary | null {
-    const root = input?.itenaryData || input?.itineraryData || input?.itinerary || (input?.text === '[itineraryData]' ? input?.data : undefined) || null;
+    const root = input?.itenaryData
+      || input?.itineraryData
+      || input?.itinerary
+      || input?.trip_itinerary
+      || input?.tripItinerary
+      || input?.trip
+      || (input?.text === '[itineraryData]' ? input?.data : undefined)
+      || null;
     if (!root || typeof root !== 'object') return null;
     const r: any = root;
     const title = r.title || r.tripTitle || r.name;
