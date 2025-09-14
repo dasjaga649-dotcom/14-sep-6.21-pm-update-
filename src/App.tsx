@@ -730,8 +730,13 @@ export default function App() {
     return arr.map((it: any, idx: number): Hotel => {
       const id = String(it.hotel_id || it.id || `hotel_${idx + 1}`);
       const name = it.name || it.hotel_name || it.title || `Hotel ${idx + 1}`;
-      const images: string[] = Array.isArray(it.images) ? it.images : Array.isArray(it.photos) ? it.photos : Array.isArray(it.imageUrls) ? it.imageUrls : [];
-      const imageUrl = it.imageUrl || it.image || images[0];
+      const images: string[] = Array.isArray(it.images) ? it.images
+        : Array.isArray(it.photos) ? it.photos
+        : Array.isArray(it.imageUrls) ? it.imageUrls
+        : Array.isArray(it.imagelinks) ? it.imagelinks
+        : Array.isArray(it.image_links) ? it.image_links
+        : [];
+      const imageUrl = it.imageUrl || it.image || images[0] || (typeof it.imagelink === 'string' ? it.imagelink : undefined);
       const ratingRaw = it.rating ?? it.stars ?? it.score;
       const rating = typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : (typeof ratingRaw === 'number' ? ratingRaw : undefined);
       const reviewsCount = typeof it.reviews === 'number' ? it.reviews : (typeof it.review_count === 'number' ? it.review_count : undefined);
