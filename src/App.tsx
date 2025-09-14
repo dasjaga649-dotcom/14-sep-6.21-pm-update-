@@ -871,7 +871,7 @@ export default function App() {
 
       <div className={`chat-overlay${open ? ' show' : ''}`} onClick={() => setOpen(false)} />
 
-      <div className={`chat-widget mobile-frame${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Chat widget">
+      <div className={`chat-widget ${expanded ? 'expanded' : 'mobile-frame'}${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Chat widget">
         <div className="device-notch" aria-hidden="true">
           <span className="notch-speaker" />
           <span className="notch-camera" />
