@@ -910,9 +910,40 @@ export default function App() {
               <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M4 4h8v2H6v6H4V4zm16 0v8h-2V6h-6V4h8zM4 20v-8h2v6h6v2H4zm16-8v8h-8v-2h6v-6h2z"/></svg>
             )}
           </button>
+          <button
+            type="button"
+            className="chat-settings"
+            aria-label="Settings"
+            onClick={() => setShowSettings(s => !s)}
+            title="API settings / test connection"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm8.1 4.1a7.4 7.4 0 0 0-.1-1l2.1-1.6-2-3.5-2.6.4a7.1 7.1 0 0 0-1.5-.9L15 2h-3L11.9 5.1c-.5.2-1 .5-1.5.9l-2.6-.4-2 3.5 2.1 1.6c0 .3 0 .7-.1 1l-2.1 1.6 2 3.5 2.6-.4c.5.4 1 .7 1.5.9L12 22h3l.6-3.1c.5-.2 1-.5 1.5-.9l2.6.4 2-3.5-2.1-1.6z"/></svg>
+          </button>
           <button className="chat-close" aria-label="Close" onClick={() => { setOpen(false); setExpanded(false); }}>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M18.3 5.7a1 1 0 0 0-1.4-1.4L12 9.17 7.1 4.3A1 1 0 1 0 5.7 5.7L10.59 10.6 5.7 15.49a1 1 0 1 0 1.4 1.42L12 12l4.9 4.91a1 1 0 1 0 1.4-1.42L13.41 10.6 18.3 5.7Z"/></svg>
           </button>
+          {showSettings && (
+            <div style={{ position: 'absolute', right: 12, top: 60, background: '#fff', border: '1px solid rgba(0,0,0,0.08)', padding: 12, borderRadius: 8, zIndex: 1200, width: 320 }}>
+              <label style={{ fontSize: 12, color: '#333' }}>API base URL</label>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <input value={apiBaseInput} onChange={e => setApiBaseInput(e.target.value)} style={{ flex: 1, padding: '8px 10px', borderRadius: 6, border: '1px solid rgba(0,0,0,0.12)' }} />
+                <button type="button" onClick={async () => {
+                  try {
+                    setApiTestResult('Testing...');
+                    setApiBase(apiBaseInput);
+                    // quick ping - attempt to send a lightweight chat request
+                    const res = await sendChat({ sessionId, userPrompt: 'ping' });
+                    setApiTestResult('OK: ' + (typeof res.data === 'string' ? res.data.slice(0,120) : JSON.stringify(res.data).slice(0,120)));
+                  } catch (err: any) {
+                    const msg = err?.response?.data?.message || err?.message || String(err);
+                    setApiTestResult('ERR: ' + msg);
+                  }
+                }} style={{ padding: '8px 10px', borderRadius: 6, background: '#FF9D00', color: '#fff', border: 'none' }}>Test</button>
+              </div>
+              {apiTestResult && <div style={{ marginTop: 8, fontSize: 13 }}>{apiTestResult}</div>}
+              <div style={{ marginTop: 10, fontSize: 12, color: '#666' }}>Note: If using local backend, ensure frontend runs on same machine or expose backend (ngrok). Also enable CORS on the backend.</div>
+            </div>
+          )}
         </div>
         <div className="chat-widget-body">
           <div className="chat-messages iphone-chat">
