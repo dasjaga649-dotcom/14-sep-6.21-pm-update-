@@ -221,7 +221,45 @@
 }
 
 /* Perfect iPhone frame */
-.chat-widget.mobile-frame { --phone-w: 390px; --phone-h: 844px; --scale-x: calc((100vw - 32px) / var(--phone-w)); --scale-y: calc((100vh - 32px) / var(--phone-h)); --scale: min(var(--scale-x), var(--scale-y)); width: var(--phone-w); height: var(--phone-h); /* position at right-bottom instead of centered */ right: 16px; bottom: 84px; left: auto; top: auto; transform: translateY(0) scale(var(--scale)); border-radius: 42px; border: 2.5px solid #000; box-shadow: 0 24px 60px rgba(0,0,0,0.35); grid-template-rows: 26px auto auto 1fr auto; padding: 0; background: #fff; }
+.chat-widget.mobile-frame {
+  --phone-w: 390px;
+  --phone-h: 844px;
+  --scale-x: calc((100vw - 32px) / var(--phone-w));
+  --scale-y: calc((100vh - 32px) / var(--phone-h));
+  --scale: min(var(--scale-x), var(--scale-y));
+  width: var(--phone-w);
+  height: var(--phone-h);
+  /* reliably position at right-bottom and prevent centering transforms */
+  position: fixed !important;
+  right: 16px !important;
+  bottom: 84px !important;
+  left: auto !important;
+  top: auto !important;
+  transform: translateY(0) scale(var(--scale));
+  transform-origin: bottom right;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 32px);
+  border-radius: 42px;
+  border: 2.5px solid #000;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  grid-template-rows: 26px auto auto 1fr auto;
+  padding: 0;
+  background: #fff;
+  z-index: 1000;
+}
+
+/* On very small viewports keep the frame sized to available width and pinned to the right */
+@media (max-width: 460px) {
+  .chat-widget.mobile-frame {
+    width: calc(100% - 32px) !important;
+    height: auto !important;
+    --scale: 1;
+    right: 16px !important;
+    bottom: 84px !important;
+    transform: translateY(0) scale(1) !important;
+    border-radius: 20px;
+  }
+}
 
 /* Notch + sensors */
 .device-notch { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 210px; height: 32px; background: #000; border-bottom-left-radius: 22px; border-bottom-right-radius: 22px; border-top-left-radius: 22px; border-top-right-radius: 22px; display: flex; align-items: center; justify-content: center; gap: 16px; z-index: 3; }
