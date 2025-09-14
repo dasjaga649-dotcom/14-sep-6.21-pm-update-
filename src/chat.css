@@ -280,6 +280,23 @@
 .chat-widget.mobile-frame .chat-widget-body { padding: 10px 14px; height: auto; max-height: none; }
 .chat-widget.mobile-frame .chat-widget-input { padding: 10px 14px 18px; border-radius: 0 0 42px 42px; }
 
+/* Header compact layout */
+.header-left { display: flex; align-items: center; gap: 10px; }
+.avatar { width: 36px; height: 36px; background: linear-gradient(180deg,#ff6b6b,#ff3b3b); color: #fff; border-radius: 8px; display: inline-grid; place-items: center; font-weight: 700; }
+.header-titles { display: grid; gap: 2px; }
+.chat-subtitle { font-size: 12px; opacity: .8; color: #333; }
+
+/* Suggestions chips */
+.suggestions-row { display: flex; gap: 8px; padding: 8px 0 12px; overflow-x: auto; }
+.suggestion-chip { white-space: nowrap; border: 0; background: #fff; color: #333; padding: 8px 12px; border-radius: 999px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); cursor: pointer; font-size: 13px; }
+
+/* Assistant messages as full-width cards */
+.bubble-assistant { align-self: flex-start; background: transparent; padding: 0; max-width: 100%; }
+.bubble-assistant > * { background: #fff; color: #000; border-radius: 12px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+
+/* User bubble tweak */
+.bubble-user { align-self: flex-end; background: #61dafb; color: #000; border-bottom-right-radius: 4px; }
+
 /* Responsive fallback width when viewport is tiny */
 @media (max-width: 420px) { .chat-widget { width: calc(100% - 32px); } }
 

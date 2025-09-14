@@ -885,7 +885,13 @@ export default function App() {
           </div>
         </div>
         <div className="chat-widget-header">
-          <div className="chat-widget-title">Chatbot</div>
+          <div className="header-left">
+            <span className="avatar">DI</span>
+            <div className="header-titles">
+              <div className="chat-widget-title">DIYA AI</div>
+              <div className="chat-subtitle">options including flights, hotels and more. Feel free to ask.</div>
+            </div>
+          </div>
           <div className="chat-endpoint">{apiBase.replace(/\/$/, '')}/chat</div>
           <button
             type="button"
@@ -905,6 +911,11 @@ export default function App() {
           </button>
         </div>
         <div className="chat-widget-body">
+          <div className="suggestions-row">
+            {['Flight options','Hotel options','Plan a trip','My upcoming booking','Generate eticket','Cancellation charges','Cancel my flight','FAQs'].map((s,i)=>(
+              <button key={i} type="button" className="suggestion-chip">{s}</button>
+            ))}
+          </div>
           <div className="chat-messages iphone-chat">
             {messages.map((m, i) => (
               <div
