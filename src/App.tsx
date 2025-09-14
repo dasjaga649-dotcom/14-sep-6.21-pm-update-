@@ -210,8 +210,8 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
 
       <div className="attractions-pagination">
         <button type="button" className="page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">‹</button>
-        <span className="page-indicator">Page {page} of {pageCount}</span>
-        <button type="button" className="page-btn" onClick={() => setPage(p => Math.min(pageCount, p + 1))} disabled={page === pageCount} aria-label="Next page">›</button>
+        <span className="page-indicator">Page {page} of {totalPages}</span>
+        <button type="button" className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page">›</button>
       </div>
     </div>
   );
