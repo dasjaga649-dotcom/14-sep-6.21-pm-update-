@@ -891,10 +891,8 @@ export default function App() {
             <span className="avatar">DI</span>
             <div className="header-titles">
               <div className="chat-widget-title">DIYA AI</div>
-              <div className="chat-subtitle">options including flights, hotels and more. Feel free to ask.</div>
             </div>
           </div>
-          <div className="chat-endpoint">{apiBase.replace(/\/$/, '')}/chat</div>
           <button
             type="button"
             className="chat-expand"
