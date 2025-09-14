@@ -15,8 +15,16 @@
 .md h1, .md h2, .md h3 { margin: 8px 0; font-weight: 600; }
 .md p { margin: 6px 0; }
 .md ul, .md ol { padding: 0 0 0 20px; margin: 6px 0; }
+.md li + li { margin-top: 2px; }
+.md a { color: #000; text-decoration: underline; }
+.md img { max-width: 100%; height: auto; display: block; border-radius: 8px; margin: 6px 0; }
+.md blockquote { margin: 6px 0; padding: 6px 10px; border-left: 3px solid #61dafb; background: #f2f2f7; color: #000; border-radius: 8px; }
+.md hr { border: 0; border-top: 1px solid rgba(0,0,0,0.12); margin: 8px 0; }
 .md code { padding: 2px 4px; border-radius: 4px; background: rgba(0,0,0,0.06); }
-.md pre { margin: 8px 0; }
+.md pre, .md .md-pre { margin: 8px 0; background: #f6f8fa; color: #000; padding: 10px; border-radius: 8px; overflow: auto; }
+.md .md-code { font-family: Menlo, Monaco, Consolas, 'Courier New', monospace; font-size: 12px; }
+.md table, .md .md-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+.md table th, .md table td, .md .md-table th, .md .md-table td { border: 1px solid rgba(0,0,0,0.12); padding: 6px 8px; text-align: left; }
 
 /* JSON block */
 .json-pre { margin: 6px 0; padding: 10px; border-radius: 8px; background: #f6f8fa; color: #000; overflow: auto; }
