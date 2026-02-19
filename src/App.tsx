@@ -88,12 +88,35 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
   const [minRating, setMinRating] = useState<number>(0);
   const [showFilter, setShowFilter] = useState(false);
   const [page, setPage] = useState(1);
-  const pageSize = 9;
+
+  // Responsive columns and fixed rows (max 4 rows)
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [columns, setColumns] = useState(1);
+  const rows = 4;
+  const minItemWidth = 220; // matches hotel cards
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width || el.clientWidth || 1;
+        const cols = Math.max(1, Math.floor(w / minItemWidth));
+        setColumns(cols);
+      }
+    });
+    ro.observe(el);
+    const initW = el.clientWidth || 0;
+    setColumns(Math.max(1, Math.floor(initW / minItemWidth)));
+    return () => ro.disconnect();
+  }, []);
+
+  const pageSize = Math.max(1, columns * rows);
 
   const categories = useMemo(() => {
     const s = new Set<string>();
     items.forEach((a: any) => {
-      const c = a?.category ?? a?.type ?? a?.category_name ?? a?.kind ?? null;
+      const c = a?.category ?? a?.type ?? a?.category_name ?? a?.kind ?? 'Other';
       if (c) s.add(String(c));
     });
     return Array.from(s).sort((a, b) => a.localeCompare(b));
@@ -104,7 +127,7 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
     return items.filter((a: any) => {
       const cat = String(a?.category ?? a?.type ?? a?.category_name ?? 'Other');
       const matchesCat = category === 'All' || cat === category;
-      const r = typeof a?.rating === 'number' ? a.rating : 0;
+      const r = typeof a?.rating === 'number' ? a.rating : (typeof a?.rating === 'string' ? parseFloat(a.rating) : 0);
       const matchesRating = !minRating || r >= minRating;
       const text = [a.title, a.location, a.description].filter(Boolean).join(' ').toLowerCase();
       const matchesQ = !q || text.includes(q);
@@ -112,8 +135,10 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
     });
   }, [items, search, category, minRating]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
-  useEffect(() => { setPage(1); }, [search, category, minRating, items.length]);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { setPage(1); }, [search, category, minRating, items.length, columns]);
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [totalPages]);
+
   const pageItems = filtered.slice((page - 1) * pageSize, page * pageSize);
 
   return (
@@ -152,7 +177,7 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
         </div>
       </div>
 
-      <div className="attractions-cards" role="list">
+      <div className="attractions-cards" role="list" ref={containerRef}>
         {pageItems.map((a, idx) => (
           <article key={a.id ?? idx} className="attraction-card" role="listitem">
             {a.imageUrl && (
@@ -185,8 +210,8 @@ function AttractionsCards({ items }: { items: Attraction[] }) {
 
       <div className="attractions-pagination">
         <button type="button" className="page-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} aria-label="Previous page">‹</button>
-        <span className="page-indicator">Page {page} of {pageCount}</span>
-        <button type="button" className="page-btn" onClick={() => setPage(p => Math.min(pageCount, p + 1))} disabled={page === pageCount} aria-label="Next page">›</button>
+        <span className="page-indicator">Page {page} of {totalPages}</span>
+        <button type="button" className="page-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} aria-label="Next page">›</button>
       </div>
     </div>
   );
@@ -214,6 +239,7 @@ function FlightResults({ flights }: { flights: Flight[] }) {
   const [classSel, setClassSel] = useState<string>('Any');
   const [timeSel, setTimeSel] = useState<'any' | 'night' | 'morning' | 'afternoon' | 'evening'>('any');
   const [sort, setSort] = useState<'priceAsc' | 'durationAsc' | 'departAsc'>('priceAsc');
+  const [showFilters, setShowFilters] = useState(false);
 
   const priceCeil = Math.ceil(Math.max(...flights.map(f => f.price)) || 0);
 
@@ -244,67 +270,78 @@ function FlightResults({ flights }: { flights: Flight[] }) {
   return (
     <div className="flight-results">
       <div className="flight-toolbar">
-        <div className="flight-filters">
-          <div className="filter-col">
-            <label className="filter-title">Airlines</label>
-            <div className="airlines-list">
-              {airlines.map(a => (
-                <label key={a} className="airline-check">
-                  <input
-                    type="checkbox"
-                    checked={airlinesSel.includes(a)}
-                    onChange={e => setAirlinesSel(prev => e.target.checked ? [...prev, a] : prev.filter(x => x !== a))}
-                  />
-                  <span>{a}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Max Price</label>
-            <div className="price-row">
-              <input className="price-range" type="range" min={0} max={priceCeil} value={priceMax} onChange={e => setPriceMax(Number(e.target.value))} />
-              <span className="price-value">Up to {filtered[0]?.currency || flights[0]?.currency || 'USD'} {priceMax}</span>
-            </div>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Departure Time</label>
-            <select className="filter-select" value={timeSel} onChange={e => setTimeSel(e.target.value as any)}>
-              <option value="any">Any</option>
-              <option value="morning">Morning (6AM - 12PM)</option>
-              <option value="afternoon">Afternoon (12PM - 6PM)</option>
-              <option value="evening">Evening (6PM - 12AM)</option>
-              <option value="night">Night (12AM - 6AM)</option>
-            </select>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Stops</label>
-            <select className="filter-select" value={String(stopsSel)} onChange={e => setStopsSel(e.target.value === 'any' ? 'any' : (e.target.value === '2' ? 2 : Number(e.target.value) as any))}>
-              <option value="any">Any</option>
-              <option value="0">Non-stop</option>
-              <option value="1">1 Stop</option>
-              <option value="2">2+ Stops</option>
-            </select>
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Travel Class</label>
-            <select className="filter-select" value={classSel} onChange={e => setClassSel(e.target.value)}>
-              {classes.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="filter-col wide">
-            <label className="filter-title">Search</label>
-            <input className="search-input flight-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search airport or airline" />
-          </div>
-          <div className="filter-col">
-            <label className="filter-title">Sort by</label>
-            <select className="filter-select" value={sort} onChange={e => setSort(e.target.value as any)}>
-              <option value="priceAsc">Price (Low to High)</option>
-              <option value="durationAsc">Duration (Short to Long)</option>
-              <option value="departAsc">Departure (Early to Late)</option>
-            </select>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <strong>Filters</strong>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button className="filter-trigger" onClick={() => { setShowFilters(v => !v); }}>{showFilters ? 'Hide Filters' : 'Show Filters'}</button>
+            <button className="filter-trigger" onClick={() => { setQuery(''); setPriceMax(priceCeil); setAirlinesSel([]); setStopsSel('any'); setClassSel('Any'); setTimeSel('any'); setSort('priceAsc'); }}>Reset All</button>
           </div>
         </div>
+
+        {showFilters && (
+          <div className="flight-filters">
+            <div className="filter-col">
+              <label className="filter-title">Airlines</label>
+              <div className="airlines-list">
+                {airlines.map(a => (
+                  <label key={a} className="airline-check">
+                    <input
+                      type="checkbox"
+                      checked={airlinesSel.includes(a)}
+                      onChange={e => setAirlinesSel(prev => e.target.checked ? [...prev, a] : prev.filter(x => x !== a))}
+                    />
+                    <span>{a}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Max Price</label>
+              <div className="price-row">
+                <input className="price-range" type="range" min={0} max={priceCeil} value={priceMax} onChange={e => setPriceMax(Number(e.target.value))} />
+                <span className="price-value">Up to {filtered[0]?.currency || flights[0]?.currency || 'USD'} {priceMax}</span>
+              </div>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Departure Time</label>
+              <select className="filter-select" value={timeSel} onChange={e => setTimeSel(e.target.value as any)}>
+                <option value="any">Any</option>
+                <option value="morning">Morning (6AM - 12PM)</option>
+                <option value="afternoon">Afternoon (12PM - 6PM)</option>
+                <option value="evening">Evening (6PM - 12AM)</option>
+                <option value="night">Night (12AM - 6AM)</option>
+              </select>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Stops</label>
+              <select className="filter-select" value={String(stopsSel)} onChange={e => setStopsSel(e.target.value === 'any' ? 'any' : (e.target.value === '2' ? 2 : Number(e.target.value) as any))}>
+                <option value="any">Any</option>
+                <option value="0">Non-stop</option>
+                <option value="1">1 Stop</option>
+                <option value="2">2+ Stops</option>
+              </select>
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Travel Class</label>
+              <select className="filter-select" value={classSel} onChange={e => setClassSel(e.target.value)}>
+                {classes.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="filter-col wide">
+              <label className="filter-title">Search</label>
+              <input className="search-input flight-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search airport or airline" />
+            </div>
+            <div className="filter-col">
+              <label className="filter-title">Sort by</label>
+              <select className="filter-select" value={sort} onChange={e => setSort(e.target.value as any)}>
+                <option value="priceAsc">Price (Low to High)</option>
+                <option value="durationAsc">Duration (Short to Long)</option>
+                <option value="departAsc">Departure (Early to Late)</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         <div className="results-meta">Showing {filtered.length} of {flights.length} flights</div>
       </div>
 
@@ -357,22 +394,23 @@ function ItineraryCard({ data }: { data: Itinerary }) {
   const days = data.days || [];
   const duration = data.durationDays || (Array.isArray(days) ? days.length : undefined);
   const places = data.placesVisited;
+  const [openDays, setOpenDays] = useState<Record<number, boolean>>(() => ({}));
+
+  const cover = data.coverImage || data.days?.[0]?.activities?.[0]?.imageUrl || undefined;
 
   return (
     <section className="itinerary-wrap">
       <div className="itinerary-hero">
-        {data.coverImage && <img className="itinerary-hero-img" src={data.coverImage} alt={data.title || 'Trip'} loading="lazy" />}
+        {cover && <img className="itinerary-hero-img" src={cover} alt={data.title || 'Trip'} loading="lazy" />}
         <div className="itinerary-hero-overlay">
           {data.title && <h2 className="itinerary-title">{data.title}</h2>}
-          {data.subtitle && <p className="itinerary-subtitle">{data.subtitle}</p>}
+          {data.description && <p className="itinerary-subtitle">{data.description}</p>}
           <div className="itinerary-stats">
             {typeof duration === 'number' && <span className="stat-pill">Duration: {duration} {duration === 1 ? 'Day' : 'Days'}</span>}
             {typeof places === 'number' && <span className="stat-pill">Places Visited: {places}</span>}
           </div>
         </div>
       </div>
-
-      {data.description && <p className="itinerary-desc">{data.description}</p>}
 
       {Array.isArray(days) && days.length > 0 && (
         <div className="itinerary-days">
@@ -385,8 +423,12 @@ function ItineraryCard({ data }: { data: Itinerary }) {
                   <div className="day-title">{d.title || `Day ${i + 1}`}</div>
                   {d.date && <div className="day-sub">{d.date}</div>}
                 </div>
+                <div style={{ marginLeft: 'auto' }}>
+                  <button className="btn" onClick={() => setOpenDays(prev => ({ ...prev, [i]: !prev[i] }))} aria-expanded={!!openDays[i]}>{openDays[i] ? 'Hide' : `${d.activities?.length || 0} activities`}</button>
+                </div>
               </div>
-              {Array.isArray(d.activities) && d.activities.length > 0 && (
+
+              {openDays[i] !== false && Array.isArray(d.activities) && d.activities.length > 0 && (
                 <ul className="activity-list">
                   {d.activities.map((a, j) => (
                     <li key={a.id ?? j} className="activity-item">
@@ -436,6 +478,31 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
   const [sort, setSort] = useState<'priceAsc' | 'priceDesc' | 'ratingDesc'>('priceAsc');
 
+  // Pagination and responsive columns
+  const [page, setPage] = useState(1);
+  const [columns, setColumns] = useState(1);
+  const rows = 4; // max rows to show
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const minItemWidth = 240; // px
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const w = entry.contentRect.width || el.clientWidth || 1;
+        const cols = Math.max(1, Math.floor(w / minItemWidth));
+        setColumns(cols);
+      }
+    });
+    ro.observe(el);
+    const initW = el.clientWidth || 0;
+    setColumns(Math.max(1, Math.floor(initW / minItemWidth)));
+    return () => ro.disconnect();
+  }, []);
+
+  const pageSize = Math.max(1, columns * rows);
+
   const allAmenities = useMemo(() => Array.from(new Set(hotels.flatMap(h => h.amenities || []))).sort((a,b)=>a.localeCompare(b)), [hotels]);
   const currency = hotels[0]?.currency || 'USD';
 
@@ -454,9 +521,17 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
     return arr;
   }, [hotels, query, minRating, priceMin, priceMax, selectedAmenities, sort]);
 
+  useEffect(() => {
+    // reset page when filters change
+    setPage(1);
+  }, [query, minRating, priceMin, priceMax, selectedAmenities, sort, columns]);
+
   function toggleAmenity(a: string, checked: boolean) {
     setSelectedAmenities(prev => checked ? [...prev, a] : prev.filter(x => x !== a));
   }
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  useEffect(() => { if (page > totalPages) setPage(totalPages); }, [totalPages]);
 
   return (
     <section className="hotel-results">
@@ -521,8 +596,8 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
         </div>
       )}
 
-      <div className="hotel-grid" role="list">
-        {filtered.map((h, i) => (
+      <div className="hotel-grid" role="list" ref={containerRef}>
+        {filtered.slice((page-1)*pageSize, page*pageSize).map((h, i) => (
           <article key={h.id || i} className="hotel-card" role="listitem">
             {h.imageUrl && <img className="hotel-img" src={h.imageUrl} alt={h.name} loading="lazy" />}
             <div className="hotel-body">
@@ -547,6 +622,13 @@ function HotelsResults({ hotels }: { hotels: Hotel[] }) {
           </article>
         ))}
       </div>
+
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'center', alignItems: 'center', padding: '10px' }}>
+        <button className="btn secondary" type="button" onClick={() => setPage(p => Math.max(1, p-1))} disabled={page===1}>Previous</button>
+        <div style={{ fontSize: 13 }}>{Math.min((page-1)*pageSize+1, filtered.length)} - {Math.min(page*pageSize, filtered.length)} of {filtered.length}</div>
+        <button className="btn" type="button" onClick={() => setPage(p => Math.min(p+1, Math.ceil(filtered.length / pageSize)))} disabled={page*pageSize>=filtered.length}>Next</button>
+      </div>
+
     </section>
   );
 }
@@ -572,7 +654,20 @@ function MessageContent({ m }: { m: ChatMessage }) {
   }
   if (m.kind === 'markdown') {
     return (
-      <div className="md"><ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text || ''}</ReactMarkdown></div>
+      <div className="md">
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          components={{
+            a: (props: any) => <a {...props} target="_blank" rel="noreferrer" />,
+            img: (props: any) => <img {...props} loading="lazy" alt={props.alt || ''} />,
+            table: (props: any) => <table {...props} className="md-table" />,
+            pre: (props: any) => <pre {...props} className="md-pre" />,
+            code: (props: any) => <code {...props} className={`md-code ${props.className || ''}`.trim()} />,
+          }}
+        >
+          {m.text || ''}
+        </ReactMarkdown>
+      </div>
     );
   }
   return <span>{m.text}</span>;
@@ -585,6 +680,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
   const apiBase = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
 
@@ -637,47 +733,62 @@ export default function App() {
   }
 
   function normalizeItinerary(input: any): Itinerary | null {
-    const root = input?.itenaryData || input?.itineraryData || input?.itinerary || (input?.text === '[itineraryData]' ? input?.data : undefined) || null;
+    const root = input?.itenaryData
+      || input?.itineraryData
+      || input?.itinerary
+      || input?.trip_itinerary
+      || input?.tripItinerary
+      || input?.trip
+      || (input?.text === '[itineraryData]' ? input?.data : undefined)
+      || null;
     if (!root || typeof root !== 'object') return null;
     const r: any = root;
-    const title = r.title || r.tripTitle || r.name;
-    const subtitle = r.subtitle || r.tagline;
-    const description = r.description || r.summary || r.about;
-    const coverImage = r.coverImage || r.image || r.hero || r.banner;
-    const durationDays = typeof r.durationDays === 'number' ? r.durationDays : (Array.isArray(r.days) ? r.days.length : undefined);
-    const placesVisited = typeof r.placesVisited === 'number' ? r.placesVisited : undefined;
 
+    // Support payloads that use overview and dailyPlan (user data)
+    const overview = r.overview || r.summary || null;
+    const title = r.title || overview?.title || r.tripTitle || r.name || overview?.destination;
+    const subtitle = r.subtitle || r.tagline || overview?.summary;
+    const description = r.description || overview?.summary || r.summary || r.about;
+    const coverImage = r.coverImage || r.image || r.hero || r.banner || overview?.image || undefined;
+    const durationDays = typeof (overview?.stats?.durationInDays ?? r.durationDays) === 'number' ? (overview?.stats?.durationInDays ?? r.durationDays) : (Array.isArray(r.days) ? r.days.length : undefined);
+    const placesVisited = typeof (overview?.stats?.placesVisited ?? r.placesVisited) === 'number' ? (overview?.stats?.placesVisited ?? r.placesVisited) : undefined;
+
+    // dailyPlan support
     const daysSrc: any[] = Array.isArray(r.days) ? r.days
       : Array.isArray(r.itineraryDays) ? r.itineraryDays
       : Array.isArray(r.schedule) ? r.schedule
+      : Array.isArray(r.dailyPlan) ? r.dailyPlan
+      : Array.isArray(overview?.dailyPlan) ? overview.dailyPlan
       : [];
 
     const days: ItineraryDay[] = daysSrc.map((d: any, i: number) => {
-      const title = d.title || d.name || d.heading || `Day ${i + 1}`;
+      const title = d.title || d.name || d.heading || (typeof d.day === 'number' ? `Day ${d.day}` : `Day ${i + 1}`) || `Day ${i + 1}`;
       const date = d.date || d.day || undefined;
-      const actsSrc: any[] = Array.isArray(d.activities) ? d.activities : Array.isArray(d.items) ? d.items : [];
+      const actsSrc: any[] = Array.isArray(d.activities) ? d.activities : Array.isArray(d.items) ? d.items : Array.isArray(d.activity) ? d.activity : (Array.isArray(d.activitiesList) ? d.activitiesList : []);
       const activities: ItineraryActivity[] = actsSrc.map((a: any, j: number) => {
         const ratingRaw = a.rating ?? a.stars ?? a.score;
         const rating = typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : (typeof ratingRaw === 'number' ? ratingRaw : undefined);
+        const imageUrl = a.imageUrl || a.image || a.photo || a.thumbnail || (Array.isArray(a.imageLinks) ? a.imageLinks[0] : undefined) || (Array.isArray(a.image_links) ? a.image_links[0] : undefined);
         return {
-          id: a.id ?? j,
-          title: a.title || a.name || `Activity ${j + 1}`,
-          description: a.description || a.desc || a.summary,
-          imageUrl: a.imageUrl || a.image || a.photo || a.thumbnail,
+          id: a.id ?? a.activity_id ?? j,
+          title: a.title || a.name || a.activityName || `Activity ${j + 1}`,
+          description: a.description || a.desc || a.summary || a.overview,
+          imageUrl,
           rating,
         };
       });
       return { id: d.id ?? i, title, date, activities };
     });
 
-    const moreSrc: any[] = Array.isArray(r.exploreMore) ? r.exploreMore : Array.isArray(r.recommendations) ? r.recommendations : [];
+    const moreSrc: any[] = Array.isArray(r.exploreMore) ? r.exploreMore : Array.isArray(r.recommendations) ? r.recommendations : Array.isArray(r.explore) ? r.explore : [];
     const exploreMore: ItineraryActivity[] = moreSrc.map((x: any, k: number) => {
       const ratingRaw = x.rating ?? x.stars ?? x.score;
       const rating = typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : (typeof ratingRaw === 'number' ? ratingRaw : undefined);
+      const imageUrl = x.imageUrl || x.image || x.photo || x.thumbnail || (Array.isArray(x.imageLinks) ? x.imageLinks[0] : undefined);
       return {
-        id: x.id ?? k,
+        id: x.id ?? x.activity_id ?? k,
         title: x.title || x.name || `Place ${k + 1}`,
-        imageUrl: x.imageUrl || x.image || x.photo || x.thumbnail,
+        imageUrl,
         rating,
       };
     });
@@ -686,18 +797,24 @@ export default function App() {
   }
 
   function normalizeHotels(input: any): Hotel[] | null {
+    const textLow = typeof input?.text === 'string' ? input.text.toLowerCase() : undefined;
     const arr: any[] | undefined = Array.isArray(input?.hotelsData) ? input.hotelsData
       : Array.isArray(input?.hotels) ? input.hotels
       : Array.isArray(input?.dbData) ? input.dbData
       : Array.isArray(input?.items) ? input.items
-      : Array.isArray(input?.data) && (input.text === 'HotelData' || input.text === '[HotelData]') ? input.data
+      : (Array.isArray(input?.data) && (textLow === 'hoteldata' || textLow === '[hoteldata]')) ? input.data
       : undefined;
     if (!arr || arr.length === 0) return null;
     return arr.map((it: any, idx: number): Hotel => {
       const id = String(it.hotel_id || it.id || `hotel_${idx + 1}`);
       const name = it.name || it.hotel_name || it.title || `Hotel ${idx + 1}`;
-      const images: string[] = Array.isArray(it.images) ? it.images : Array.isArray(it.photos) ? it.photos : Array.isArray(it.imageUrls) ? it.imageUrls : [];
-      const imageUrl = it.imageUrl || it.image || images[0];
+      const images: string[] = Array.isArray(it.images) ? it.images
+        : Array.isArray(it.photos) ? it.photos
+        : Array.isArray(it.imageUrls) ? it.imageUrls
+        : Array.isArray(it.imagelinks) ? it.imagelinks
+        : Array.isArray(it.image_links) ? it.image_links
+        : [];
+      const imageUrl = it.imageUrl || it.image || images[0] || (typeof it.imagelink === 'string' ? it.imagelink : undefined);
       const ratingRaw = it.rating ?? it.stars ?? it.score;
       const rating = typeof ratingRaw === 'string' ? parseFloat(ratingRaw) : (typeof ratingRaw === 'number' ? ratingRaw : undefined);
       const reviewsCount = typeof it.reviews === 'number' ? it.reviews : (typeof it.review_count === 'number' ? it.review_count : undefined);
@@ -712,84 +829,138 @@ export default function App() {
   }
 
   function toAssistantMessage(data: unknown, contentType?: string): ChatMessage {
+    // Try to extract JSON object embedded inside markdown text (fenced code block or plain JSON substring)
+    function extractJsonFromMarkdown(text: string): any | null {
+      if (!text) return null;
+      try {
+        // Match ```json ... ``` or ``` ... ``` code block
+        const codeBlock = /```(?:json)?\s*([\s\S]*?)```/.exec(text);
+        const candidate = codeBlock ? codeBlock[1].trim() : null;
+        if (candidate) {
+          try { return JSON.parse(candidate); } catch(e) { /* fallthrough */ }
+        }
+        // Fallback: find first {...} substring that looks like JSON
+        const braceMatch = /([\{\[][\s\S]*[\}\]])/.exec(text);
+        if (braceMatch) {
+          const c = braceMatch[1];
+          try { return JSON.parse(c); } catch(e) { /* fallthrough */ }
+        }
+      } catch (e) {
+        // ignore
+      }
+      return null;
+    }
+
+    // Helper heuristics to detect array types
+    function isFlightArray(arr: any[]): boolean {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+      const sample = arr[0];
+      if (!sample || typeof sample !== 'object') return false;
+      const keys = Object.keys(sample).map(k => k.toLowerCase());
+      const flightHints = ['departure', 'arrival', 'flight', 'airline', 'origin', 'destination', 'departureairport', 'arrivalairport', 'departure_time', 'arrival_time'];
+      return flightHints.some(h => keys.some(k => k.includes(h)));
+    }
+
+    function isHotelArray(arr: any[]): boolean {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+      const sample = arr[0];
+      if (!sample || typeof sample !== 'object') return false;
+      const keys = Object.keys(sample).map(k => k.toLowerCase());
+      const hotelHints = ['hotel', 'price', 'rating', 'stars', 'amenity', 'room', 'checkin', 'checkout'];
+      return hotelHints.some(h => keys.some(k => k.includes(h)));
+    }
+
+    function isAttractionArray(arr: any[]): boolean {
+      if (!Array.isArray(arr) || arr.length === 0) return false;
+      const sample = arr[0];
+      if (!sample || typeof sample !== 'object') return false;
+      const keys = Object.keys(sample).map(k => k.toLowerCase());
+      const attrHints = ['attraction', 'place', 'location', 'description', 'summary', 'image', 'photo', 'placeName'];
+      return attrHints.some(h => keys.some(k => k.includes(h)));
+    }
+
+    // Process a parsed object and return the best ChatMessage representation
+    function processParsedObject(obj: any): ChatMessage {
+      if (!obj || typeof obj !== 'object') return { role: 'assistant', kind: 'json', json: obj };
+
+      // If object contains an array under common keys, inspect it first
+      const maybeArrays = [obj.flightsData, obj.dbData, obj.flights, obj.items, obj.data, obj.attractionsData, obj.attractions, obj.hotelData, obj.hotels];
+      const arr = maybeArrays.find(a => Array.isArray(a)) as any[] | undefined;
+      if (arr) {
+        if (isFlightArray(arr)) {
+          const flights = normalizeFlights({ data: arr, flightsData: arr, flights: arr, items: arr });
+          if (flights) return { role: 'assistant', kind: 'flights', flights };
+        }
+        if (isHotelArray(arr)) {
+          const hotels = normalizeHotels({ data: arr, hotels: arr, items: arr });
+          if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
+        }
+        if (isAttractionArray(arr)) {
+          const attractions = normalizeAttractions({ data: arr, attractions: arr, items: arr });
+          if (attractions) return { role: 'assistant', kind: 'attractions', attractions };
+        }
+      }
+
+      // Prefer structured cards (itinerary) when present
+      const iti = normalizeItinerary(obj);
+      if (iti) return { role: 'assistant', kind: 'itinerary', itinerary: iti };
+
+      // As a fallback, attempt specific normalizers against the whole object (keeps previous behavior)
+      const flights = normalizeFlights(obj);
+      if (flights) return { role: 'assistant', kind: 'flights', flights };
+
+      const hotels = normalizeHotels(obj);
+      if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
+
+      const attractions = normalizeAttractions(obj);
+      if (attractions) return { role: 'assistant', kind: 'attractions', attractions };
+
+      // If plain text fields are provided, render them as markdown
+      if (typeof obj.text === 'string') return { role: 'assistant', kind: 'markdown', text: obj.text };
+      if (typeof obj.reply === 'string') return { role: 'assistant', kind: 'markdown', text: obj.reply };
+
+      // Fallback: show raw JSON
+      return { role: 'assistant', kind: 'json', json: obj };
+    }
+
+    // If server explicitly sent JSON content-type, parse and process
     if (contentType?.includes('application/json')) {
       try {
         const obj = typeof data === 'string' ? JSON.parse(data) : data;
-        const isFlights = obj && (obj.text === '[flightData]' || (obj as any).type === 'flightData' || (obj as any).kind === 'flights');
-        if (isFlights) {
-          const flights = normalizeFlights(obj);
-          if (flights) return { role: 'assistant', kind: 'flights', flights };
-        }
-        const hotels = normalizeHotels(obj);
-        if ((obj as any)?.text === 'HotelData' || hotels) {
-          if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-        }
-        const iti = normalizeItinerary(obj);
-        if (iti) {
-          return { role: 'assistant', kind: 'itinerary', itinerary: iti };
-        }
-        const shouldShowCards = obj && (obj.text === '[attractionsData]' || obj.type === 'attractionsData' || obj.kind === 'attractions');
-        const normalized = normalizeAttractions(obj);
-        if (shouldShowCards && normalized) {
-          return { role: 'assistant', kind: 'attractions', attractions: normalized };
-        }
-        return { role: 'assistant', kind: 'json', json: obj };
+        return processParsedObject(obj);
       } catch {
         return { role: 'assistant', kind: 'json', json: data };
       }
     }
+
+    // If server sent markdown/plain text, try to extract JSON from it first
     if (contentType?.includes('text/markdown') || contentType?.includes('text/plain')) {
+      if (typeof data === 'string') {
+        const parsed = extractJsonFromMarkdown(data);
+        if (parsed) return processParsedObject(parsed);
+        return { role: 'assistant', kind: 'markdown', text: data };
+      }
+      // non-string markdown - fallback to show as markdown
       return { role: 'assistant', kind: 'markdown', text: typeof data === 'string' ? data : JSON.stringify(data, null, 2) };
     }
+
+    // If data is a string, attempt to parse JSON; if fails, try to extract JSON from markdown content; otherwise show markdown
     if (typeof data === 'string') {
       try {
         const parsed = JSON.parse(data);
-        if ((parsed as any)?.text === '[flightData]' || (parsed as any)?.type === 'flightData' || (parsed as any)?.kind === 'flights') {
-          const flights = normalizeFlights(parsed);
-          if (flights) return { role: 'assistant', kind: 'flights', flights };
-        }
-        const hotels = normalizeHotels(parsed);
-        if ((parsed as any)?.text === 'HotelData' || hotels) {
-          if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-        }
-        const iti = normalizeItinerary(parsed);
-        if (iti) {
-          return { role: 'assistant', kind: 'itinerary', itinerary: iti };
-        }
-        const normalized = normalizeAttractions(parsed);
-        const shouldShowCards = (parsed as any)?.text === '[attractionsData]' || (parsed as any)?.type === 'attractionsData' || (parsed as any)?.kind === 'attractions';
-        if (shouldShowCards && normalized) {
-          return { role: 'assistant', kind: 'attractions', attractions: normalized };
-        }
-        return { role: 'assistant', kind: 'json', json: parsed };
+        return processParsedObject(parsed);
       } catch {
+        const extracted = extractJsonFromMarkdown(data);
+        if (extracted) return processParsedObject(extracted);
         return { role: 'assistant', kind: 'markdown', text: data };
       }
     }
+
+    // If data is already an object, process it
     if (data && typeof data === 'object') {
-      const anyData = data as Record<string, unknown>;
-      if ((anyData as any)?.text === '[flightData]' || (anyData as any)?.type === 'flightData' || (anyData as any)?.kind === 'flights') {
-        const flights = normalizeFlights(anyData);
-        if (flights) return { role: 'assistant', kind: 'flights', flights };
-      }
-      const hotels = normalizeHotels(anyData);
-      if ((anyData as any)?.text === 'HotelData' || hotels) {
-        if (hotels && hotels.length) return { role: 'assistant', kind: 'hotels', hotels };
-      }
-      const iti = normalizeItinerary(anyData);
-      if (iti) {
-        return { role: 'assistant', kind: 'itinerary', itinerary: iti };
-      }
-      const shouldShowCards = (anyData as any)?.text === '[attractionsData]' || (anyData as any)?.type === 'attractionsData' || (anyData as any)?.kind === 'attractions';
-      const normalized = normalizeAttractions(anyData);
-      if (shouldShowCards && normalized) {
-        return { role: 'assistant', kind: 'attractions', attractions: normalized };
-      }
-      if (typeof (anyData as any).reply === 'string') {
-        return { role: 'assistant', kind: 'markdown', text: (anyData as any).reply as string };
-      }
-      return { role: 'assistant', kind: 'json', json: data };
+      return processParsedObject(data);
     }
+
     return { role: 'assistant', kind: 'text', text: String(data) };
   }
 
@@ -822,6 +993,14 @@ export default function App() {
     }
   }, [messages, open]);
 
+  // When opening the widget first time, add a DIYA-like welcome assistant message
+  useEffect(() => {
+    if (open && messages.length === 0) {
+      const welcome = `Hello Guest!\nI'm your Trip Planner Bot, here to help you plan your trips with ease—just share your preferences and budget, and I'll suggest the best itinerary options including flights, hotels and more.\nFeel free to ask me anything about planning your journey, and I'll be happy to assist you!`;
+      setMessages([{ role: 'assistant', kind: 'markdown', text: welcome }]);
+    }
+  }, [open]);
+
   return (
     <div className="App">
       <header className="App-header">
@@ -834,7 +1013,7 @@ export default function App() {
           type="button"
           aria-label="Open chat"
           className="chat-launcher"
-          onClick={() => setOpen(true)}
+          onClick={() => { setOpen(true); setExpanded(false); }}
         >
           <svg className="icon" viewBox="0 0 24 24" width="26" height="26" aria-hidden="true">
             <path fill="#000" d="M12 2a1 1 0 0 1 1 1v1.05A7.5 7.5 0 0 1 20.5 11v3.5A3.5 3.5 0 0 1 17 18h-1.382l-2.724 2.724A1.75 1.75 0 0 1 9 19.75V18H7a3.5 3.5 0 0 1-3.5-3.5V11A7.5 7.5 0 0 1 11 4.05V3a1 1 0 0 1 1-1Zm-3.75 9.25a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm7.5 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z"/>
@@ -844,7 +1023,7 @@ export default function App() {
 
       <div className={`chat-overlay${open ? ' show' : ''}`} onClick={() => setOpen(false)} />
 
-      <div className={`chat-widget mobile-frame${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Chat widget">
+      <div className={`chat-widget ${expanded ? 'expanded' : 'mobile-frame'}${open ? ' open' : ''}`} role="dialog" aria-modal="true" aria-label="Chat widget">
         <div className="device-notch" aria-hidden="true">
           <span className="notch-speaker" />
           <span className="notch-camera" />
@@ -858,9 +1037,26 @@ export default function App() {
           </div>
         </div>
         <div className="chat-widget-header">
-          <div className="chat-widget-title">Chatbot</div>
-          <div className="chat-endpoint">{apiBase.replace(/\/$/, '')}/chat</div>
-          <button className="chat-close" aria-label="Close" onClick={() => setOpen(false)}>
+          <div className="header-left">
+            <span className="avatar">DI</span>
+            <div className="header-titles">
+              <div className="chat-widget-title">DIYA AI</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="chat-expand"
+            aria-label={expanded ? 'Collapse' : 'Expand'}
+            onClick={() => setExpanded(v => !v)}
+            title={expanded ? 'Collapse to mobile' : 'Expand to desktop'}
+          >
+            {expanded ? (
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M6 10h2V6h4V4H6v6zm12 4h-2v4h-4v2h6v-6zM6 14H4v6h6v-2H6v-4zm12-8v2h-4V4h-2v6h6V6z"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M4 4h8v2H6v6H4V4zm16 0v8h-2V6h-6V4h8zM4 20v-8h2v6h6v2H4zm16-8v8h-8v-2h6v-6h2z"/></svg>
+            )}
+          </button>
+          <button className="chat-close" aria-label="Close" onClick={() => { setOpen(false); setExpanded(false); }}>
             <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M18.3 5.7a1 1 0 0 0-1.4-1.4L12 9.17 7.1 4.3A1 1 0 1 0 5.7 5.7L10.59 10.6 5.7 15.49a1 1 0 1 0 1.4 1.42L12 12l4.9 4.91a1 1 0 1 0 1.4-1.42L13.41 10.6 18.3 5.7Z"/></svg>
           </button>
         </div>
@@ -880,26 +1076,22 @@ export default function App() {
         </div>
         <form className="chat-widget-input" onSubmit={onSubmit}>
           <div className="composer">
-            <button type="button" className="composer-icon attach" aria-label="Attach">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M16.5 6.5v8.25a4.75 4.75 0 1 1-9.5 0V6.25a3.25 3.25 0 1 1 6.5 0v7.75a1.75 1.75 0 1 1-3.5 0V7.5a.75.75 0 0 1 1.5 0v6.5a.25.25 0 1 0 .5 0V6.25a1.75 1.75 0 1 0-3.5 0v8.5a3.25 3.25 0 1 0 6.5 0V6.5a.75.75 0 0 1 1.5 0Z"/></svg>
-            </button>
+            <span className="input-left-icon" aria-hidden>🏛️</span>
             <input
               className="input prompt-input"
               value={userPrompt}
               onChange={e => setUserPrompt(e.target.value)}
-              placeholder="Type your message"
+              placeholder="Type your travel question here..."
               aria-label="Message"
               type="text"
             />
-            <button type="button" className="composer-icon emoji" aria-label="Emoji">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm-3 7a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 9 9Zm9 3a6 6 0 1 1-12 0 .75.75 0 0 1 1.5 0 4.5 4.5 0 1 0 9 0 .75.75 0 0 1 1.5 0ZM16 9a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 16 9Z"/></svg>
+            <button type="button" className="composer-icon mic" aria-label="Mic">🎤</button>
+            <button className="composer-send" type="submit" disabled={loading} aria-label="Send">
+              {loading ? <span>...</span> : (
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#d54848" d="M2.3 3.3a1 1 0 0 1 1.1-.2l18 8a1 1 0 0 1 0 1.8l-18 8a1 1 0 0 1-1.4-1.2l2.3-6.2L13 12 4.3 9.5 2 3.9a1 1 0 0 1 .3-1Z"/></svg>
+              )}
             </button>
           </div>
-          <button className="btn send-btn" type="submit" disabled={loading} aria-label="Send">
-            {loading ? <span>...</span> : (
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#000" d="M2.3 3.3a1 1 0 0 1 1.1-.2l18 8a1 1 0 0 1 0 1.8l-18 8a1 1 0 0 1-1.4-1.2l2.3-6.2L13 12 4.3 9.5 2 3.9a1 1 0 0 1 .3-1Z"/></svg>
-            )}
-          </button>
         </form>
       </div>
     </div>
